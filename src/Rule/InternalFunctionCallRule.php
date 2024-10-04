@@ -13,6 +13,11 @@ use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use Shopware\PhpStan\Helper\NamespaceChecker;
 
+/**
+ * @implements Rule<FuncCall>
+ *
+ * @internal
+ */
 class InternalFunctionCallRule implements Rule
 {
     private ReflectionProvider $reflectionProvider;

@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace Shopware\PhpStan\Rule;
 
 use PhpParser\Node;
+use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Identifier;
 use PHPStan\Analyser\Scope;
@@ -16,6 +17,11 @@ use PHPStan\Rules\Rule;
 use PHPStan\Type\TypeUtils;
 use Shopware\PhpStan\Helper\NamespaceChecker;
 
+/**
+ * @implements Rule<MethodCall>
+ *
+ * @internal
+ */
 class InternalMethodCallRule implements Rule
 {
     public function __construct(private readonly ReflectionProvider $reflectionProvider) {}
