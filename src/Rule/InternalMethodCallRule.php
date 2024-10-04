@@ -14,14 +14,12 @@ use PHPStan\Reflection\MissingMethodFromReflectionException;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Type\TypeUtils;
+use Shopware\PhpStan\Helper\NamespaceChecker;
 
 class InternalMethodCallRule implements Rule
 {
-    private ReflectionProvider $reflectionProvider;
-
-    public function __construct(ReflectionProvider $reflectionProvider)
+    public function __construct(private readonly ReflectionProvider $reflectionProvider)
     {
-        $this->reflectionProvider = $reflectionProvider;
     }
 
     public function getNodeType(): string
@@ -34,6 +32,10 @@ class InternalMethodCallRule implements Rule
         assert($node instanceof MethodCall);
 
         if (!$node->name instanceof Identifier) {
+            return [];
+        }
+
+        if (true === str_starts_with($scope->getNamespace() ?? '', 'Shopware\\')) {
             return [];
         }
 
