@@ -13,8 +13,6 @@ use PHPStan\Rules\RuleErrorBuilder;
 
 /**
  * @implements Rule<FuncCall>
- *
- * @internal
  */
 class DisallowFunctionsRule implements Rule
 {
@@ -22,6 +20,8 @@ class DisallowFunctionsRule implements Rule
         'var_dump',
         'exit',
         'die',
+        'dd',
+        'dump',
     ];
 
     public function getNodeType(): string
