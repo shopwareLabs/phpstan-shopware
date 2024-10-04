@@ -8,3 +8,4 @@ rules:
     - Shopware\PhpStan\Rule\InternalMethodCallRule
     - Shopware\PhpStan\Rule\DisallowFunctionsRule
     - Shopware\PhpStan\Rule\DisallowDefaultContextCreation
+    - Shopware\PhpStan\Rule\SetForeignKeyRule
