@@ -41,3 +41,19 @@ jobs:
 
       - name: PHPStan
         run: vendor/bin/phpstan analyse
+  phpunit:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Composer install
+        run: composer install
+
+      - name: PHPUnit
+        run: vendor/bin/phpunit

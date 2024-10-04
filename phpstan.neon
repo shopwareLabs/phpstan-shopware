@@ -2,3 +2,9 @@ parameters:
     level: max
     paths:
         - src
+
+rules:
+    - Shopware\PhpStan\Rule\InternalFunctionCallRule
+    - Shopware\PhpStan\Rule\InternalMethodCallRule
+    - Shopware\PhpStan\Rule\DisallowFunctionsRule
+    - Shopware\PhpStan\Rule\DisallowDefaultContextCreation

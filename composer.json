@@ -8,15 +8,26 @@
     "phpstan/phpstan": "^1.11"
   },
   "require-dev": {
-    "friendsofphp/php-cs-fixer": "v3.64.0"
+    "friendsofphp/php-cs-fixer": "v3.64.0",
+    "phpstan/extension-installer": "*",
+    "phpunit/phpunit": "~11.3.6",
+    "shopware/core": "^6.6"
   },
   "autoload": {
     "psr-4": {
       "Shopware\\PhpStan\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "Shopware\\PhpStan\\Tests\\": "tests/"
+    }
+  },
   "config": {
-    "sort-packages": true
+    "sort-packages": true,
+    "allow-plugins": {
+      "phpstan/extension-installer": true
+    }
   },
   "extra": {
     "phpstan": {
