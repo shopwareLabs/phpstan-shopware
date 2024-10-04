@@ -2,7 +2,7 @@
 
 // Code taken from https://github.com/TemirkhanN/phpstan-internal-rule
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Shopware\PhpStan\Rule;
 
@@ -18,9 +18,7 @@ use Shopware\PhpStan\Helper\NamespaceChecker;
 
 class InternalMethodCallRule implements Rule
 {
-    public function __construct(private readonly ReflectionProvider $reflectionProvider)
-    {
-    }
+    public function __construct(private readonly ReflectionProvider $reflectionProvider) {}
 
     public function getNodeType(): string
     {

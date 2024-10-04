@@ -2,8 +2,7 @@
 
 // Code taken from https://github.com/TemirkhanN/phpstan-internal-rule
 
-declare(strict_types = 1);
-
+declare(strict_types=1);
 
 namespace Shopware\PhpStan\Helper;
 

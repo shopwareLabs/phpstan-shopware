@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Shopware\PhpStan\Rule;
 
@@ -16,7 +18,6 @@ use PHPStan\Rules\RuleErrorBuilder;
  */
 class DisallowFunctionsRule implements Rule
 {
-
     private const NOT_ALLOWED_FUNCTIONS = [
         'var_dump',
         'exit',
