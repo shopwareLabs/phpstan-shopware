@@ -1,0 +1,3 @@
+rules:
+    - Shopware\PhpStan\Rule\InternalFunctionCallRule
+    - Shopware\PhpStan\Rule\InternalMethodCallRule

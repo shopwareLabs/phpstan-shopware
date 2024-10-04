@@ -1,0 +1,24 @@
+{
+    "name": "shopwarelabs/phpstan-shopware",
+    "description": "PhpStan Rules for Shopware",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "phpstan/phpstan": "^1.12"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shopware\\PhpStan\\": "src/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+		"phpstan": {
+			"includes": [
+				"rules.neon"
+			]
+		}
+	}
+}
