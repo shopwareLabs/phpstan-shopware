@@ -16,9 +16,7 @@ use PHPStan\Rules\RuleErrorBuilder;
  */
 class DisallowDefaultContextCreation implements Rule
 {
-    public function __construct(private readonly ReflectionProvider $reflectionProvider)
-    {
-    }
+    public function __construct(private readonly ReflectionProvider $reflectionProvider) {}
 
     public function getNodeType(): string
     {
@@ -28,6 +26,10 @@ class DisallowDefaultContextCreation implements Rule
     public function processNode(Node $node, Scope $scope): array
     {
         if (!$node instanceof StaticCall) {
+            return [];
+        }
+
+        if (!$node->name instanceof Node\Identifier) {
             return [];
         }
 
@@ -53,7 +55,7 @@ class DisallowDefaultContextCreation implements Rule
             RuleErrorBuilder::message(sprintf('Do not use %s::createDefaultContext() function in code.', $node->class->toString()))
                 ->addTip('If you are in a CLI context, use %s::createCliContext() instead.')
                 ->addTip('If you are in a web context, pass down the context from the controller.')
-                ->build()
+                ->build(),
         ];
     }
 }

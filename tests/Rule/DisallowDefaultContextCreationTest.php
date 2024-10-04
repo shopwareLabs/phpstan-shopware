@@ -17,7 +17,7 @@ class DisallowDefaultContextCreationTest extends RuleTestCase
     {
         $this->analyse([__DIR__ . '/../data/DisallowDefaultContextCreation/context.php'], [
             [
-<<<EOF
+                <<<EOF
 Do not use Shopware\Core\Framework\Context::createDefaultContext() function in code.
     💡 • If you are in a CLI context, use %s::createCliContext() instead.
 • If you are in a web context, pass down the context from the controller.
@@ -26,7 +26,7 @@ EOF,
             ],
         ]);
     }
-    
+
     protected function getRule(): Rule
     {
         return new DisallowDefaultContextCreation(self::createReflectionProvider());
