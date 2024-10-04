@@ -11,6 +11,7 @@ use PhpParser\Node\Expr\FuncCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
+use Shopware\PhpStan\Helper\NamespaceChecker;
 
 class InternalFunctionCallRule implements Rule
 {
