@@ -20,7 +20,7 @@ To use these rules, include the package's configuration file in your PHPStan con
 
 ```neon
 includes:
-    - vendor/shopwarelabs/phpstan-shopware/extension.neon
+    - vendor/shopwarelabs/phpstan-shopware/phpstan.neon
 ```
 
 or you use PHPStan Extension Installer
