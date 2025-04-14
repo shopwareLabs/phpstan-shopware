@@ -23,7 +23,7 @@ class NoDALFilterByIDTest extends RuleTestCase
                 <<<EOF
 Using "id" directly in EqualsFilter or EqualsAnyFilter is forbidden. Pass the ids directly to the constructor of Criteria or use setIds instead
 EOF,
-                9,
+                12,
             ],
         ]);
     }
