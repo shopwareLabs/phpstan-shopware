@@ -6,6 +6,7 @@ namespace Shopware\PhpStan\Rule;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PHPStan\Analyser\Scope;
 use PHPStan\Rules\Rule;
@@ -76,6 +77,13 @@ class ForwardSalesChannelContextToSystemConfigServiceRule implements Rule
             && $salesChannelId->name->name === 'getId'
         ) {
             return [];
+        }
+
+        if ($salesChannelId instanceof Variable && is_string($salesChannelId->name)) {
+            $variableType = $scope->getVariableType($salesChannelId->name);
+            if ($variableType->isString()->yes()) {
+                return [];
+            }
         }
 
         return [

@@ -29,4 +29,11 @@ class CorrectUsage
     {
         $this->systemConfigService->get('foo.bar');
     }
+
+    public function correctWithStringVariable(SalesChannelContext $salesChannelContext): void
+    {
+        $salesChannelId = $salesChannelContext->getSalesChannelId();
+
+        $this->systemConfigService->get('foo.bar', $salesChannelId);
+    }
 }
