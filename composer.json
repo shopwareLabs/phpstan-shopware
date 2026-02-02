@@ -33,6 +33,9 @@
     "allow-plugins": {
       "phpstan/extension-installer": true,
       "symfony/runtime": false
+    },
+    "audit": {
+      "block-insecure": false
     }
   },
   "extra": {
