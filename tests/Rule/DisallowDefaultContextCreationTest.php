@@ -21,7 +21,7 @@ class DisallowDefaultContextCreationTest extends RuleTestCase
             [
                 <<<EOF
 Do not use Shopware\Core\Framework\Context::createDefaultContext() function in code.
-    💡 • If you are in a CLI context, use %s::createCliContext() instead.
+    💡 • If you are in a CLI context, use %s::createCLIContext() instead.
 • If you are in a web context, pass down the context from the controller.
 EOF,
                 5,

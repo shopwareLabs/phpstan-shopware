@@ -43,15 +43,19 @@ class DisallowDefaultContextCreation implements Rule
             return [];
         }
 
+        if (!$this->reflectionProvider->hasClass('Shopware\Core\Framework\Context')) {
+            return [];
+        }
+
         $class = $this->reflectionProvider->getClass('Shopware\Core\Framework\Context');
 
-        if (!$class->hasMethod('createCliContext')) {
+        if (!$class->hasMethod('createCLIContext')) {
             return [];
         }
 
         return [
             RuleErrorBuilder::message(sprintf('Do not use %s::createDefaultContext() function in code.', $node->class->toString()))
-                ->addTip('If you are in a CLI context, use %s::createCliContext() instead.')
+                ->addTip('If you are in a CLI context, use %s::createCLIContext() instead.')
                 ->addTip('If you are in a web context, pass down the context from the controller.')
                 ->identifier('shopware.disallow.default.context.creation')
                 ->build(),
