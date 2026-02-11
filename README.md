@@ -73,6 +73,8 @@ Here's a comprehensive list of all available rules:
 
 19. **ForwardSalesChannelContextToSystemConfigServiceRule**: Ensures that when a method has a SalesChannelContext parameter, it is forwarded to SystemConfigService methods as the salesChannelId argument.
 
+20. **ForbidWeakCryptoKeyRule**: Prevents weak cryptographic key sizes in `openssl_pkey_new()` calls. RSA keys must be at least 2048 bits.
+
 ## Configuration
 
 You can customize the behavior of these rules by adding configuration to your `phpstan.neon` file. See the [configuration section](#configuration) for more details.
