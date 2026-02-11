@@ -67,6 +67,12 @@ Here's a comprehensive list of all available rules:
 
 16. **InternalMethodCallRule**: Controls usage of internal methods.
 
+17. **DisallowSessionFunctionsRule**: Prevents usage of session functions (`session_write_close`, `session_start`, `session_destroy`). Use the Symfony Session component instead.
+
+18. **ForbidLocalDiskWriteRule**: Prevents local disk write operations (`file_put_contents`, `fopen` with write mode, `mkdir`, `unlink`, etc.). Use the temporary directory or Flysystem instead.
+
+19. **ForwardSalesChannelContextToSystemConfigServiceRule**: Ensures that when a method has a SalesChannelContext parameter, it is forwarded to SystemConfigService methods as the salesChannelId argument.
+
 ## Configuration
 
 You can customize the behavior of these rules by adding configuration to your `phpstan.neon` file. See the [configuration section](#configuration) for more details.
