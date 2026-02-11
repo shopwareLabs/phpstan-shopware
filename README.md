@@ -75,6 +75,8 @@ Here's a comprehensive list of all available rules:
 
 20. **ForbidPredictableSaltRule**: Prevents hardcoded salts in `crypt()` and `password_hash()` calls, which are predictable and weaken security.
 
+21. **ForbidWeakCryptoKeyRule**: Prevents weak cryptographic key sizes in `openssl_pkey_new()` calls. RSA keys must be at least 2048 bits.
+
 ## Configuration
 
 You can customize the behavior of these rules by adding configuration to your `phpstan.neon` file. See the [configuration section](#configuration) for more details.
