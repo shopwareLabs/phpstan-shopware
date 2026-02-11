@@ -21,6 +21,7 @@ rules:
     - Shopware\PhpStan\Rule\BestPractise\DALDefinitionRule
     - Shopware\PhpStan\Rule\ForwardSalesChannelContextToSystemConfigServiceRule
     - Shopware\PhpStan\Rule\ForbidPredictableSaltRule
+    - Shopware\PhpStan\Rule\ForbidWeakCryptoKeyRule
 
 services:
     -
