@@ -73,6 +73,8 @@ Here's a comprehensive list of all available rules:
 
 19. **ForwardSalesChannelContextToSystemConfigServiceRule**: Ensures that when a method has a SalesChannelContext parameter, it is forwarded to SystemConfigService methods as the salesChannelId argument.
 
+20. **ForbidInsecureCookieRule**: Prevents setting cookies without the secure flag in `setcookie()` and `setrawcookie()` calls. Cookies should use `secure=true` for HTTPS-only transmission.
+
 ## Configuration
 
 You can customize the behavior of these rules by adding configuration to your `phpstan.neon` file. See the [configuration section](#configuration) for more details.
