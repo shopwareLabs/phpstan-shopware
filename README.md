@@ -83,6 +83,8 @@ Here's a comprehensive list of all available rules:
 
 24. **ForbidDisabledSslVerificationRule**: Prevents disabling SSL/TLS certificate verification in `curl_setopt()` and `stream_context_create()` calls, which allows man-in-the-middle attacks.
 
+25. **NoEmptyResponseRule**: Detects Response class/subclass instantiations with empty or missing body content. Checks classes where the first constructor parameter represents the response body (e.g. `Response`, `JsonResponse`, `JsonApiResponse`) and allows empty bodies for status codes like 204, 301, 302, 304, 307, and 308.
+
 ## Configuration
 
 You can customize the behavior of these rules by adding configuration to your `phpstan.neon` file. See the [configuration section](#configuration) for more details.
