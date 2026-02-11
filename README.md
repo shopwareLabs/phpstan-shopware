@@ -73,6 +73,8 @@ Here's a comprehensive list of all available rules:
 
 19. **ForwardSalesChannelContextToSystemConfigServiceRule**: Ensures that when a method has a SalesChannelContext parameter, it is forwarded to SystemConfigService methods as the salesChannelId argument.
 
+20. **ForbidHardcodedCredentialsRule**: Detects hardcoded credentials (passwords, API keys, secrets, tokens) in array definitions. Use environment variables instead.
+
 ## Configuration
 
 You can customize the behavior of these rules by adding configuration to your `phpstan.neon` file. See the [configuration section](#configuration) for more details.
