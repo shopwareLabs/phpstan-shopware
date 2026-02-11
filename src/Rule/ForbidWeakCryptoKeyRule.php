@@ -25,7 +25,7 @@ class ForbidWeakCryptoKeyRule implements Rule
     }
 
     /**
-     * @return array<array-key, RuleError|string>
+     * @return list<RuleError>
      */
     public function processNode(Node $node, Scope $scope): array
     {
@@ -34,11 +34,11 @@ class ForbidWeakCryptoKeyRule implements Rule
         }
 
         $args = $node->getArgs();
-        if (count($args) < 1) {
+        if (!isset($args[0])) {
             return [];
         }
 
-        // openssl_pkey_new($config): 1st argument is the config array
+        // openssl_pkey_new($options): 1st argument is the config array
         $configArg = $args[0]->value;
         if (!$configArg instanceof Array_) {
             return [];
