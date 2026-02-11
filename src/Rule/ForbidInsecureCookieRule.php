@@ -53,7 +53,7 @@ class ForbidInsecureCookieRule implements Rule
         }
 
         // Legacy signature: secure flag is the 6th argument (index 5)
-        if (count($args) <= self::SECURE_PARAM_INDEX) {
+        if (!isset($args[self::SECURE_PARAM_INDEX])) {
             return $this->buildError($node);
         }
 
