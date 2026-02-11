@@ -73,7 +73,9 @@ Here's a comprehensive list of all available rules:
 
 19. **ForwardSalesChannelContextToSystemConfigServiceRule**: Ensures that when a method has a SalesChannelContext parameter, it is forwarded to SystemConfigService methods as the salesChannelId argument.
 
-20. **ForbidWeakCryptoKeyRule**: Prevents weak cryptographic key sizes in `openssl_pkey_new()` calls. RSA keys must be at least 2048 bits.
+20. **ForbidPredictableSaltRule**: Prevents hardcoded salts in `crypt()` and `password_hash()` calls, which are predictable and weaken security.
+
+21. **ForbidWeakCryptoKeyRule**: Prevents weak cryptographic key sizes in `openssl_pkey_new()` calls. RSA keys must be at least 2048 bits.
 
 ## Configuration
 
