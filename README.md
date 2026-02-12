@@ -77,6 +77,10 @@ Here's a comprehensive list of all available rules:
 
 21. **ForbidWeakCryptoKeyRule**: Prevents weak cryptographic key sizes in `openssl_pkey_new()` calls. RSA keys must be at least 2048 bits.
 
+22. **ForbidInsecureCookieRule**: Prevents setting cookies without the secure flag in `setcookie()` and `setrawcookie()` calls. Cookies should use `secure=true` for HTTPS-only transmission.
+
+23. **ForbidInsecureSymfonyCookieRule**: Prevents creating Symfony `Cookie` objects without explicit `secure=true`. Detects `new Cookie(...)`, `Cookie::create(...)`, and `->withSecure(false)` calls. The `$secure` parameter must be explicitly set to `true` for HTTPS-only transmission.
+
 ## Configuration
 
 You can customize the behavior of these rules by adding configuration to your `phpstan.neon` file. See the [configuration section](#configuration) for more details.
