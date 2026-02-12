@@ -25,7 +25,7 @@ class ForbidHardcodedCredentialsRule implements Rule
     }
 
     /**
-     * @return array<array-key, RuleError|string>
+     * @return list<RuleError>
      */
     public function processNode(Node $node, Scope $scope): array
     {
