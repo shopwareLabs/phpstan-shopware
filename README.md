@@ -73,9 +73,13 @@ Here's a comprehensive list of all available rules:
 
 19. **ForwardSalesChannelContextToSystemConfigServiceRule**: Ensures that when a method has a SalesChannelContext parameter, it is forwarded to SystemConfigService methods as the salesChannelId argument.
 
-20. **ForbidInsecureCookieRule**: Prevents setting cookies without the secure flag in `setcookie()` and `setrawcookie()` calls. Cookies should use `secure=true` for HTTPS-only transmission.
+20. **ForbidPredictableSaltRule**: Prevents hardcoded salts in `crypt()` and `password_hash()` calls, which are predictable and weaken security.
 
-21. **ForbidInsecureSymfonyCookieRule**: Prevents creating Symfony `Cookie` objects without explicit `secure=true`. Detects `new Cookie(...)`, `Cookie::create(...)`, and `->withSecure(false)` calls. The `$secure` parameter must be explicitly set to `true` for HTTPS-only transmission.
+21. **ForbidWeakCryptoKeyRule**: Prevents weak cryptographic key sizes in `openssl_pkey_new()` calls. RSA keys must be at least 2048 bits.
+
+22. **ForbidInsecureCookieRule**: Prevents setting cookies without the secure flag in `setcookie()` and `setrawcookie()` calls. Cookies should use `secure=true` for HTTPS-only transmission.
+
+23. **ForbidInsecureSymfonyCookieRule**: Prevents creating Symfony `Cookie` objects without explicit `secure=true`. Detects `new Cookie(...)`, `Cookie::create(...)`, and `->withSecure(false)` calls. The `$secure` parameter must be explicitly set to `true` for HTTPS-only transmission.
 
 ## Configuration
 
