@@ -12,7 +12,6 @@ use PhpParser\Node\Scalar\String_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Rules\IdentifierRuleError;
 use PHPStan\Rules\Rule;
-use PHPStan\Rules\RuleError;
 use PHPStan\Rules\RuleErrorBuilder;
 
 /**
@@ -32,7 +31,7 @@ class ForbidInsecureCookieRule implements Rule
     }
 
     /**
-     * @return array<array-key, RuleError|string>
+     * @return list<IdentifierRuleError>
      */
     public function processNode(Node $node, Scope $scope): array
     {
@@ -48,7 +47,7 @@ class ForbidInsecureCookieRule implements Rule
         $args = $node->getArgs();
 
         // Array options signature: setcookie($name, $value, ['secure' => true, ...])
-        if (count($args) >= 3 && $args[self::OPTIONS_PARAM_INDEX]->value instanceof Array_) {
+        if (isset($args[self::OPTIONS_PARAM_INDEX]) && $args[self::OPTIONS_PARAM_INDEX]->value instanceof Array_) {
             return $this->checkArrayOptions($node, $args[self::OPTIONS_PARAM_INDEX]->value);
         }
 

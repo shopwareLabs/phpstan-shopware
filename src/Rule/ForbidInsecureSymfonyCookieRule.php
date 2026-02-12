@@ -116,7 +116,7 @@ class ForbidInsecureSymfonyCookieRule implements Rule
         $args = $node->getArgs();
 
         // withSecure() with no args defaults to true
-        if (\count($args) === 0) {
+        if (!isset($args[0])) {
             return [];
         }
 

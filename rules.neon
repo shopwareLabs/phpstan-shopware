@@ -16,12 +16,12 @@ rules:
     - Shopware\PhpStan\Rule\SetForeignKeyRule
     - Shopware\PhpStan\Rule\NoEntityRepositoryInLoopRule
     - Shopware\PhpStan\Rule\NoSuperglobalsRule
-    - Shopware\PhpStan\Rule\ForbidInsecureCookieRule
-    - Shopware\PhpStan\Rule\ForbidInsecureSymfonyCookieRule
     - Shopware\PhpStan\Rule\ForbidLocalDiskWriteRule
     - Shopware\PhpStan\Rule\BestPractise\PreferRouteEventRule
     - Shopware\PhpStan\Rule\BestPractise\DALDefinitionRule
     - Shopware\PhpStan\Rule\ForwardSalesChannelContextToSystemConfigServiceRule
+    - Shopware\PhpStan\Rule\ForbidInsecureCookieRule
+    - Shopware\PhpStan\Rule\ForbidInsecureSymfonyCookieRule
 
 services:
     -
