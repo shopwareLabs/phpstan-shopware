@@ -53,4 +53,9 @@ class DALDefinitionRuleTest extends \PHPStan\Testing\RuleTestCase
     {
         $this->analyse([__DIR__ . '/fixtures/DALDefinitionRule/public-property.php'], []);
     }
+
+    public function testChildrenAssociationFieldWithSelfClass(): void
+    {
+        $this->analyse([__DIR__ . '/fixtures/DALDefinitionRule/children-association-self-class.php'], []);
+    }
 }

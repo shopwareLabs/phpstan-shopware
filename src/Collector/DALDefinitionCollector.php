@@ -144,6 +144,9 @@ class DALDefinitionCollector implements Collector
         if ($class->is(BreadcrumbField::class)) {
             return 'breadcrumb';
         }
+        if ($class->is(ChildrenAssociationField::class)) {
+            return 'children';
+        }
 
         $args = $newInstance->getArgs();
         if (empty($args)) {
@@ -184,11 +187,6 @@ class DALDefinitionCollector implements Collector
             isset($args[0]) &&
             property_exists($args[0]->value, 'value')
         ) {
-
-            if ($class->is(ChildrenAssociationField::class)) {
-                return 'children';
-            }
-
             if ($args[0]->value instanceof \PhpParser\Node\Scalar\String_) {
                 return $args[0]->value->value;
             }
