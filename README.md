@@ -81,6 +81,8 @@ Here's a comprehensive list of all available rules:
 
 23. **ForbidInsecureSymfonyCookieRule**: Prevents creating Symfony `Cookie` objects without explicit `secure=true`. Detects `new Cookie(...)`, `Cookie::create(...)`, and `->withSecure(false)` calls. The `$secure` parameter must be explicitly set to `true` for HTTPS-only transmission.
 
+24. **ForbidDisabledSslVerificationRule**: Prevents disabling SSL/TLS certificate verification in `curl_setopt()` and `stream_context_create()` calls, which allows man-in-the-middle attacks.
+
 ## Configuration
 
 You can customize the behavior of these rules by adding configuration to your `phpstan.neon` file. See the [configuration section](#configuration) for more details.
