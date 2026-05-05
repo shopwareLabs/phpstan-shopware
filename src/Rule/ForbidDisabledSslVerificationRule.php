@@ -7,13 +7,13 @@ namespace Shopware\PhpStan\Rule;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Rules\IdentifierRuleError;
 use PHPStan\Rules\Rule;
-use PHPStan\Rules\RuleError;
 use PHPStan\Rules\RuleErrorBuilder;
 
 /**
@@ -27,7 +27,7 @@ class ForbidDisabledSslVerificationRule implements Rule
     }
 
     /**
-     * @return array<array-key, RuleError|string>
+     * @return list<IdentifierRuleError>
      */
     public function processNode(Node $node, Scope $scope): array
     {
@@ -49,7 +49,7 @@ class ForbidDisabledSslVerificationRule implements Rule
     }
 
     /**
-     * @return array<array-key, RuleError|string>
+     * @return list<IdentifierRuleError>
      */
     private function checkStreamContext(FuncCall $node): array
     {
@@ -65,7 +65,15 @@ class ForbidDisabledSslVerificationRule implements Rule
             }
 
             foreach ($item->value->items as $sslItem) {
-                if ($sslItem->key instanceof String_ && $sslItem->key->value === 'verify_peer' && $sslItem->value instanceof ConstFetch && $sslItem->value->name->toLowerString() === 'false') {
+                if (!$sslItem->key instanceof String_) {
+                    continue;
+                }
+
+                if (!\in_array($sslItem->key->value, ['verify_peer', 'verify_peer_name'], true)) {
+                    continue;
+                }
+
+                if ($this->isDisabledVerificationValue($sslItem->value)) {
                     return $this->buildError($node);
                 }
             }
@@ -75,7 +83,7 @@ class ForbidDisabledSslVerificationRule implements Rule
     }
 
     /**
-     * @return array<array-key, RuleError|string>
+     * @return list<IdentifierRuleError>
      */
     private function checkCurlSetopt(FuncCall $node): array
     {
@@ -94,15 +102,33 @@ class ForbidDisabledSslVerificationRule implements Rule
         $optionName = $optionArg->name->toString();
         $valueArg = $args[2]->value;
 
-        if ($optionName === 'CURLOPT_SSL_VERIFYPEER' && $valueArg instanceof ConstFetch && $valueArg->name->toLowerString() === 'false') {
+        if ($optionName === 'CURLOPT_SSL_VERIFYPEER' && $this->isDisabledVerificationValue($valueArg)) {
             return $this->buildError($node);
         }
 
-        if ($optionName === 'CURLOPT_SSL_VERIFYHOST' && $valueArg instanceof Int_ && $valueArg->value < 2) {
+        if ($optionName === 'CURLOPT_SSL_VERIFYHOST' && $this->isDisabledVerifyHostValue($valueArg)) {
             return $this->buildError($node);
         }
 
         return [];
+    }
+
+    private function isDisabledVerificationValue(Expr $value): bool
+    {
+        if ($value instanceof ConstFetch && $value->name->toLowerString() === 'false') {
+            return true;
+        }
+
+        return $value instanceof Int_ && $value->value === 0;
+    }
+
+    private function isDisabledVerifyHostValue(Expr $value): bool
+    {
+        if ($this->isDisabledVerificationValue($value)) {
+            return true;
+        }
+
+        return $value instanceof Int_ && $value->value < 2;
     }
 
     /**

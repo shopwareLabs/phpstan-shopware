@@ -24,6 +24,7 @@ rules:
     - Shopware\PhpStan\Rule\ForbidWeakCryptoKeyRule
     - Shopware\PhpStan\Rule\ForbidInsecureCookieRule
     - Shopware\PhpStan\Rule\ForbidInsecureSymfonyCookieRule
+    - Shopware\PhpStan\Rule\ForbidDisabledSslVerificationRule
 
 services:
     -

@@ -32,7 +32,23 @@ class ForbidDisabledSslVerificationRuleTest extends RuleTestCase
             ],
             [
                 'SSL/TLS certificate verification disabled: this allows man-in-the-middle attacks.',
-                23,
+                24,
+            ],
+            [
+                'SSL/TLS certificate verification disabled: this allows man-in-the-middle attacks.',
+                30,
+            ],
+            [
+                'SSL/TLS certificate verification disabled: this allows man-in-the-middle attacks.',
+                35,
+            ],
+            [
+                'SSL/TLS certificate verification disabled: this allows man-in-the-middle attacks.',
+                44,
+            ],
+            [
+                'SSL/TLS certificate verification disabled: this allows man-in-the-middle attacks.',
+                53,
             ],
         ]);
     }

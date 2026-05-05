@@ -18,6 +18,7 @@ class CorrectUsage
         $context = stream_context_create([
             'ssl' => [
                 'verify_peer' => true,
+                'verify_peer_name' => true,
             ],
         ]);
     }
