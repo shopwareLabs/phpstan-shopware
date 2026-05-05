@@ -75,6 +75,26 @@ class CorrectUsage
         return new Response(status: Response::HTTP_NO_CONTENT, content: '');
     }
 
+    public function customResponseWithContent(): CorrectCustomMessageResponse
+    {
+        return new CorrectCustomMessageResponse('Hello World');
+    }
+
+    public function customResponseWithAllowedEmptyStatus(): CorrectCustomMessageResponse
+    {
+        return new CorrectCustomMessageResponse('', Response::HTTP_NO_CONTENT);
+    }
+
+    public function customResponseWithNamedAllowedEmptyStatus(): CorrectCustomMessageResponse
+    {
+        return new CorrectCustomMessageResponse(statusCode: Response::HTTP_NO_CONTENT, message: '');
+    }
+
+    public function customResponseWithUnrelatedConstructorArgs(): CustomRouteResponse
+    {
+        return new CustomRouteResponse('detail.route');
+    }
+
     // Response subclasses with non-body first parameter — should not be flagged
 
     public function emptyRedirectResponse(): RedirectResponse
@@ -90,5 +110,21 @@ class CorrectUsage
     public function emptyBinaryFileResponse(): BinaryFileResponse
     {
         return new BinaryFileResponse('/path/to/file');
+    }
+}
+
+class CorrectCustomMessageResponse extends Response
+{
+    public function __construct(string $message = '', int $statusCode = Response::HTTP_OK)
+    {
+        parent::__construct($message, $statusCode);
+    }
+}
+
+class CustomRouteResponse extends Response
+{
+    public function __construct(string $routeName)
+    {
+        parent::__construct('Route: ' . $routeName);
     }
 }

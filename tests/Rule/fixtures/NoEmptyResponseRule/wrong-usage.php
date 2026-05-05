@@ -52,4 +52,27 @@ class WrongUsage
     {
         return new Response(content: '', status: 200);
     }
+
+    public function customResponseWithDefaultEmptyBody(): WrongCustomMessageResponse
+    {
+        return new WrongCustomMessageResponse();
+    }
+
+    public function customResponseWithBlankString(): WrongCustomMessageResponse
+    {
+        return new WrongCustomMessageResponse('');
+    }
+
+    public function customResponseWithNamedBlankString(): WrongCustomMessageResponse
+    {
+        return new WrongCustomMessageResponse(statusCode: 200, message: '');
+    }
+}
+
+class WrongCustomMessageResponse extends Response
+{
+    public function __construct(string $message = '', int $statusCode = Response::HTTP_OK)
+    {
+        parent::__construct($message, $statusCode);
+    }
 }

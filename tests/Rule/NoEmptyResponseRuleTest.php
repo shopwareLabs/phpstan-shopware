@@ -58,6 +58,18 @@ class NoEmptyResponseRuleTest extends RuleTestCase
                 'Response with empty body. Return meaningful content or use a status code like 204 (No Content) for intentionally empty responses.',
                 53,
             ],
+            [
+                'Response with empty body. Return meaningful content or use a status code like 204 (No Content) for intentionally empty responses.',
+                58,
+            ],
+            [
+                'Response with empty body. Return meaningful content or use a status code like 204 (No Content) for intentionally empty responses.',
+                63,
+            ],
+            [
+                'Response with empty body. Return meaningful content or use a status code like 204 (No Content) for intentionally empty responses.',
+                68,
+            ],
         ]);
     }
 }
