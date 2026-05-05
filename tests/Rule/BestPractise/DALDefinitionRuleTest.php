@@ -67,4 +67,18 @@ class DALDefinitionRuleTest extends \PHPStan\Testing\RuleTestCase
             ],
         ]);
     }
+
+    public function testReferenceVersionField(): void
+    {
+        $this->analyse([__DIR__ . '/fixtures/DALDefinitionRule/reference-version-field.php'], [
+            [
+                'The field "parentVersionId" in the definition "foo" is not defined in the entity "Shopware\Tests\Rule\BestPractise\fixtures\DALDefinitionRule\FooEntity".',
+                1,
+            ],
+            [
+                'The field "fooVersionId" in the definition "foo" is not defined in the entity "Shopware\Tests\Rule\BestPractise\fixtures\DALDefinitionRule\FooEntity".',
+                1,
+            ],
+        ]);
+    }
 }

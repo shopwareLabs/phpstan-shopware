@@ -151,27 +151,38 @@ class DALDefinitionCollector implements Collector
         }
 
         if ($class->is(ReferenceVersionField::class) && isset($args[0])) {
-            $firstArg = $args[0];
-            $firstValue = $scope->getType($firstArg->value);
-            $constantStrings = $firstValue->getConstantStrings();
+            $storageName = null;
 
-            if (!empty($constantStrings)) {
-                $entityName = $constantStrings[0]->getValue();
+            if (isset($args[1]) && $args[1]->value instanceof \PhpParser\Node\Scalar\String_) {
+                $storageName = $args[1]->value->value;
+            } else {
+                $firstArg = $args[0];
+                $firstValue = $scope->getType($firstArg->value);
+                $constantStrings = $firstValue->getConstantStrings();
 
-                try {
-                    /** @var class-string<EntityDefinition> */
-                    $className = $entityName;
+                if (!empty($constantStrings)) {
+                    $entityName = $constantStrings[0]->getValue();
 
-                    $entityInstance = new $className();
-                    $entityName = $entityInstance->getEntityName();
-                } catch (\Throwable) {
+                    try {
+                        /** @var class-string<EntityDefinition> */
+                        $className = $entityName;
+
+                        $entityInstance = new $className();
+                        $entityName = $entityInstance->getEntityName();
+                    } catch (\Throwable) {
+                    }
+
+                    $storageName = $entityName . '_version_id';
                 }
+            }
 
-                $storageName = $entityName . '_version_id';
+            if ($storageName !== null) {
                 $propertyName = explode('_', $storageName);
                 $propertyName = array_map('ucfirst', $propertyName);
+
                 return lcfirst(implode('', $propertyName));
             }
+
             return 'versionId';
         }
 
