@@ -54,6 +54,20 @@ class DALDefinitionRuleTest extends \PHPStan\Testing\RuleTestCase
         $this->analyse([__DIR__ . '/fixtures/DALDefinitionRule/public-property.php'], []);
     }
 
+    public function testChildrenAssociationField(): void
+    {
+        $this->analyse([__DIR__ . '/fixtures/DALDefinitionRule/children-association-field.php'], [
+            [
+                'The field "children" in the definition "tree" is not defined in the entity "Shopware\Tests\Rule\BestPractise\fixtures\DALDefinitionRule\TreeEntity".',
+                1,
+            ],
+            [
+                'The field "customChildren" in the definition "tree" is not defined in the entity "Shopware\Tests\Rule\BestPractise\fixtures\DALDefinitionRule\TreeEntity".',
+                1,
+            ],
+        ]);
+    }
+
     public function testReferenceVersionField(): void
     {
         $this->analyse([__DIR__ . '/fixtures/DALDefinitionRule/reference-version-field.php'], [

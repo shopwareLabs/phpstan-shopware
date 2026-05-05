@@ -195,16 +195,15 @@ class DALDefinitionCollector implements Collector
             isset($args[0]) &&
             property_exists($args[0]->value, 'value')
         ) {
-
-            if ($class->is(ChildrenAssociationField::class)) {
-                return 'children';
-            }
-
             if ($args[0]->value instanceof \PhpParser\Node\Scalar\String_) {
                 return $args[0]->value->value;
             }
 
             throw new \RuntimeException(sprintf("Cannot handle field %s with argument of type %s and value %s", $class->getName(), get_class($args[0]->value), json_encode($args[0]->value->value)));
+        }
+
+        if ($class->is(ChildrenAssociationField::class) && !isset($args[1])) {
+            return 'children';
         }
 
         if (isset($args[1]) && $args[1]->value instanceof \PhpParser\Node\Scalar\String_) {
