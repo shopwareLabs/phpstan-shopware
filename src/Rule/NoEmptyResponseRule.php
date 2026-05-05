@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace Shopware\PhpStan\Rule;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\New_;
-use PhpParser\Node\Scalar\String_;
 use PHPStan\Analyser\Scope;
+use PHPStan\Reflection\ParameterReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleError;
 use PHPStan\Rules\RuleErrorBuilder;
 use PHPStan\Type\Constant\ConstantIntegerType;
 use PHPStan\Type\ObjectType;
+use PHPStan\Type\Type;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -56,7 +58,7 @@ class NoEmptyResponseRule implements Rule
     }
 
     /**
-     * @return array<array-key, RuleError|string>
+     * @return list<RuleError>
      */
     public function processNode(Node $node, Scope $scope): array
     {
@@ -72,26 +74,32 @@ class NoEmptyResponseRule implements Rule
             return [];
         }
 
-        $bodyIndex = $this->resolveBodyParameterIndex($className);
-        if ($bodyIndex === null) {
+        $bodyParameter = $this->resolveBodyParameter($className);
+        if ($bodyParameter === null) {
             return [];
         }
 
-        $args = $node->getArgs();
+        $bodyArg = $this->findArgumentForParameter($node, $bodyParameter['index'], $bodyParameter['name']);
+        $statusParameter = $this->resolveStatusParameter($className);
+        $statusArg = $statusParameter === null ? null : $this->findArgumentForParameter($node, $statusParameter['index'], $statusParameter['name']);
 
-        // new Response() — no arguments at all
-        if (count($args) === 0) {
+        if ($bodyArg === null) {
+            if (!$this->isEmptyDefaultBody($bodyParameter['parameter'])) {
+                return [];
+            }
+
+            if ($statusArg !== null && $this->isAllowedEmptyStatusCode($statusArg->value, $scope)) {
+                return [];
+            }
+
             return $this->buildError($node);
         }
 
-        // Check if the body argument is a blank string
-        if (!isset($args[$bodyIndex]) || !$args[$bodyIndex]->value instanceof String_ || $args[$bodyIndex]->value->value !== '') {
+        if (!$this->isEmptyBodyValue($bodyArg->value, $scope)) {
             return [];
         }
 
-        // Blank body with a status code that legitimately allows empty responses
-        $statusIndex = $this->resolveStatusParameterIndex($className);
-        if ($statusIndex !== null && isset($args[$statusIndex]) && $this->isAllowedEmptyStatusCode($args[$statusIndex]->value, $scope)) {
+        if ($statusArg !== null && $this->isAllowedEmptyStatusCode($statusArg->value, $scope)) {
             return [];
         }
 
@@ -100,24 +108,30 @@ class NoEmptyResponseRule implements Rule
 
     /**
      * Finds the constructor parameter index that represents the response body.
+     *
+     * @return array{index: int, name: string, parameter: ParameterReflection}|null
      */
-    private function resolveBodyParameterIndex(string $className): ?int
+    private function resolveBodyParameter(string $className): ?array
     {
-        return $this->findParameterIndexByNames($className, self::BODY_PARAMETER_NAMES);
+        return $this->findParameterByNames($className, self::BODY_PARAMETER_NAMES);
     }
 
     /**
      * Finds the constructor parameter index that represents the HTTP status code.
+     *
+     * @return array{index: int, name: string, parameter: ParameterReflection}|null
      */
-    private function resolveStatusParameterIndex(string $className): ?int
+    private function resolveStatusParameter(string $className): ?array
     {
-        return $this->findParameterIndexByNames($className, self::STATUS_PARAMETER_NAMES);
+        return $this->findParameterByNames($className, self::STATUS_PARAMETER_NAMES);
     }
 
     /**
      * @param list<string> $names
+     *
+     * @return array{index: int, name: string, parameter: ParameterReflection}|null
      */
-    private function findParameterIndexByNames(string $className, array $names): ?int
+    private function findParameterByNames(string $className, array $names): ?array
     {
         if (!$this->reflectionProvider->hasClass($className)) {
             return null;
@@ -131,11 +145,70 @@ class NoEmptyResponseRule implements Rule
 
         foreach ($classReflection->getConstructor()->getOnlyVariant()->getParameters() as $index => $parameter) {
             if (in_array($parameter->getName(), $names, true)) {
-                return $index;
+                return [
+                    'index' => $index,
+                    'name' => $parameter->getName(),
+                    'parameter' => $parameter,
+                ];
             }
         }
 
         return null;
+    }
+
+    private function findArgumentForParameter(New_ $node, int $parameterIndex, string $parameterName): ?Arg
+    {
+        $positionalIndex = 0;
+
+        foreach ($node->getArgs() as $arg) {
+            if ($arg->name !== null) {
+                if ($arg->name->toString() === $parameterName) {
+                    return $arg;
+                }
+
+                continue;
+            }
+
+            if ($arg->unpack) {
+                return null;
+            }
+
+            if ($positionalIndex === $parameterIndex) {
+                return $arg;
+            }
+
+            ++$positionalIndex;
+        }
+
+        return null;
+    }
+
+    private function isEmptyDefaultBody(ParameterReflection $parameter): bool
+    {
+        $defaultValue = $parameter->getDefaultValue();
+        if ($defaultValue === null) {
+            return false;
+        }
+
+        return $this->isEmptyStringType($defaultValue);
+    }
+
+    private function isEmptyBodyValue(Node\Expr $expr, Scope $scope): bool
+    {
+        $type = $scope->getType($expr);
+
+        if ($this->isEmptyStringType($type)) {
+            return true;
+        }
+
+        return $type->isNull()->yes();
+    }
+
+    private function isEmptyStringType(Type $type): bool
+    {
+        $constantStrings = $type->getConstantStrings();
+
+        return \count($constantStrings) === 1 && $constantStrings[0]->getValue() === '';
     }
 
     /**

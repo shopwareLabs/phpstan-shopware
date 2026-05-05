@@ -25,6 +25,7 @@ rules:
     - Shopware\PhpStan\Rule\ForbidInsecureCookieRule
     - Shopware\PhpStan\Rule\ForbidInsecureSymfonyCookieRule
     - Shopware\PhpStan\Rule\ForbidDisabledSslVerificationRule
+    - Shopware\PhpStan\Rule\NoEmptyResponseRule
 
 services:
     -
@@ -41,4 +42,3 @@ services:
         class: Shopware\PhpStan\Collector\DALEntityCollector
         tags:
             - phpstan.collector
-

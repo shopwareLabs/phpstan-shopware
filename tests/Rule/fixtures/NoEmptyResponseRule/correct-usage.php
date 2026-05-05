@@ -28,6 +28,16 @@ class CorrectUsage
         return new JsonApiResponse(['data' => 'value']);
     }
 
+    public function jsonResponseWithDefaultData(): JsonResponse
+    {
+        return new JsonResponse();
+    }
+
+    public function jsonApiResponseWithDefaultData(): JsonApiResponse
+    {
+        return new JsonApiResponse();
+    }
+
     // Allowed empty status codes
 
     public function noContentResponse(): Response
@@ -53,6 +63,16 @@ class CorrectUsage
     public function notModifiedResponse(): Response
     {
         return new Response('', 304);
+    }
+
+    public function noContentWithNamedStatus(): Response
+    {
+        return new Response(status: 204);
+    }
+
+    public function noContentWithNamedArguments(): Response
+    {
+        return new Response(status: Response::HTTP_NO_CONTENT, content: '');
     }
 
     // Response subclasses with non-body first parameter — should not be flagged

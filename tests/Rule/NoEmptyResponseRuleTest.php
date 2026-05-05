@@ -24,27 +24,39 @@ class NoEmptyResponseRuleTest extends RuleTestCase
         $this->analyse([__DIR__ . '/fixtures/NoEmptyResponseRule/wrong-usage.php'], [
             [
                 'Response with empty body. Return meaningful content or use a status code like 204 (No Content) for intentionally empty responses.',
-                15,
+                13,
             ],
             [
                 'Response with empty body. Return meaningful content or use a status code like 204 (No Content) for intentionally empty responses.',
-                20,
+                18,
             ],
             [
                 'Response with empty body. Return meaningful content or use a status code like 204 (No Content) for intentionally empty responses.',
-                25,
+                23,
             ],
             [
                 'Response with empty body. Return meaningful content or use a status code like 204 (No Content) for intentionally empty responses.',
-                30,
+                28,
             ],
             [
                 'Response with empty body. Return meaningful content or use a status code like 204 (No Content) for intentionally empty responses.',
-                35,
+                33,
             ],
             [
                 'Response with empty body. Return meaningful content or use a status code like 204 (No Content) for intentionally empty responses.',
-                40,
+                38,
+            ],
+            [
+                'Response with empty body. Return meaningful content or use a status code like 204 (No Content) for intentionally empty responses.',
+                43,
+            ],
+            [
+                'Response with empty body. Return meaningful content or use a status code like 204 (No Content) for intentionally empty responses.',
+                48,
+            ],
+            [
+                'Response with empty body. Return meaningful content or use a status code like 204 (No Content) for intentionally empty responses.',
+                53,
             ],
         ]);
     }
