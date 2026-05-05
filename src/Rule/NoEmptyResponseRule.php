@@ -74,30 +74,23 @@ class NoEmptyResponseRule implements Rule
             return [];
         }
 
-        $bodyParameter = $this->resolveBodyParameter($className);
+        $parameters = $this->getConstructorParameters($className);
+        if ($parameters === null) {
+            return [];
+        }
+
+        $bodyParameter = $this->findParameterByNames($parameters, self::BODY_PARAMETER_NAMES);
         if ($bodyParameter === null) {
             return [];
         }
 
         $bodyArg = $this->findArgumentForParameter($node, $bodyParameter['index'], $bodyParameter['name']);
-        $statusParameter = $this->resolveStatusParameter($className);
-        $statusArg = $statusParameter === null ? null : $this->findArgumentForParameter($node, $statusParameter['index'], $statusParameter['name']);
-
-        if ($bodyArg === null) {
-            if (!$this->isEmptyDefaultBody($bodyParameter['parameter'])) {
-                return [];
-            }
-
-            if ($statusArg !== null && $this->isAllowedEmptyStatusCode($statusArg->value, $scope)) {
-                return [];
-            }
-
-            return $this->buildError($node);
-        }
-
-        if (!$this->isEmptyBodyValue($bodyArg->value, $scope)) {
+        if (!$this->isEmptyBody($bodyArg, $bodyParameter['parameter'], $scope)) {
             return [];
         }
+
+        $statusParameter = $this->findParameterByNames($parameters, self::STATUS_PARAMETER_NAMES);
+        $statusArg = $statusParameter === null ? null : $this->findArgumentForParameter($node, $statusParameter['index'], $statusParameter['name']);
 
         if ($statusArg !== null && $this->isAllowedEmptyStatusCode($statusArg->value, $scope)) {
             return [];
@@ -107,31 +100,9 @@ class NoEmptyResponseRule implements Rule
     }
 
     /**
-     * Finds the constructor parameter index that represents the response body.
-     *
-     * @return array{index: int, name: string, parameter: ParameterReflection}|null
+     * @return list<ParameterReflection>|null
      */
-    private function resolveBodyParameter(string $className): ?array
-    {
-        return $this->findParameterByNames($className, self::BODY_PARAMETER_NAMES);
-    }
-
-    /**
-     * Finds the constructor parameter index that represents the HTTP status code.
-     *
-     * @return array{index: int, name: string, parameter: ParameterReflection}|null
-     */
-    private function resolveStatusParameter(string $className): ?array
-    {
-        return $this->findParameterByNames($className, self::STATUS_PARAMETER_NAMES);
-    }
-
-    /**
-     * @param list<string> $names
-     *
-     * @return array{index: int, name: string, parameter: ParameterReflection}|null
-     */
-    private function findParameterByNames(string $className, array $names): ?array
+    private function getConstructorParameters(string $className): ?array
     {
         if (!$this->reflectionProvider->hasClass($className)) {
             return null;
@@ -143,7 +114,18 @@ class NoEmptyResponseRule implements Rule
             return null;
         }
 
-        foreach ($classReflection->getConstructor()->getOnlyVariant()->getParameters() as $index => $parameter) {
+        return $classReflection->getConstructor()->getOnlyVariant()->getParameters();
+    }
+
+    /**
+     * @param list<ParameterReflection> $parameters
+     * @param list<string> $names
+     *
+     * @return array{index: int, name: string, parameter: ParameterReflection}|null
+     */
+    private function findParameterByNames(array $parameters, array $names): ?array
+    {
+        foreach ($parameters as $index => $parameter) {
             if (in_array($parameter->getName(), $names, true)) {
                 return [
                     'index' => $index,
@@ -154,6 +136,23 @@ class NoEmptyResponseRule implements Rule
         }
 
         return null;
+    }
+
+    private function isEmptyBody(?Arg $bodyArg, ParameterReflection $bodyParameter, Scope $scope): bool
+    {
+        if ($bodyArg === null) {
+            $defaultValue = $bodyParameter->getDefaultValue();
+
+            return $defaultValue !== null && $this->isEmptyStringType($defaultValue);
+        }
+
+        $type = $scope->getType($bodyArg->value);
+
+        if ($this->isEmptyStringType($type)) {
+            return true;
+        }
+
+        return $type->isNull()->yes();
     }
 
     private function findArgumentForParameter(New_ $node, int $parameterIndex, string $parameterName): ?Arg
@@ -181,27 +180,6 @@ class NoEmptyResponseRule implements Rule
         }
 
         return null;
-    }
-
-    private function isEmptyDefaultBody(ParameterReflection $parameter): bool
-    {
-        $defaultValue = $parameter->getDefaultValue();
-        if ($defaultValue === null) {
-            return false;
-        }
-
-        return $this->isEmptyStringType($defaultValue);
-    }
-
-    private function isEmptyBodyValue(Node\Expr $expr, Scope $scope): bool
-    {
-        $type = $scope->getType($expr);
-
-        if ($this->isEmptyStringType($type)) {
-            return true;
-        }
-
-        return $type->isNull()->yes();
     }
 
     private function isEmptyStringType(Type $type): bool
