@@ -184,12 +184,14 @@ class DALDefinitionCollector implements Collector
         }
 
         if (
-            ($class->is(TranslatedField::class) ||
+            (
+                $class->is(TranslatedField::class) ||
                 $class->is(OneToManyAssociationField::class) ||
                 $class->is(ManyToOneAssociationField::class) ||
                 $class->is(OneToOneAssociationField::class) ||
                 $class->is(ManyToManyAssociationField::class)
-            ) && !$class->is(ChildrenAssociationField::class)
+            )
+            && !$class->is(ChildrenAssociationField::class)
             && isset($args[0])
         ) {
             $value = $this->toStringValue($args[0]->value, $scope);

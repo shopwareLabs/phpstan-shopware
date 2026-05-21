@@ -19,17 +19,17 @@ use Shopware\Core\Framework\DataAbstractionLayer\Field\VersionField;
 
 class FooDefinition extends EntityDefinition
 {
-    private const string FIELD_ID_STORAGE = 'id';
-    private const string FIELD_ID_PROPERTY = 'id';
+    private const FIELD_ID_STORAGE = 'id';
+    private const FIELD_ID_PROPERTY = 'id';
 
-    private const string FIELD_SOME_STRING_STORAGE = 'some_string';
-    private const string FIELD_SOME_STRING_PROPERTY = 'someString';
+    private const FIELD_SOME_STRING_STORAGE = 'some_string';
+    private const FIELD_SOME_STRING_PROPERTY = 'someString';
 
-    private const string FIELD_SUB_FOO_STORAGE = 'sub_foo_id';
-    private const string FIELD_SUB_FOO_PROPERTY = 'subFoo';
-    private const string FIELD_SUB_FOO_REFERENCE = 'id';
+    private const FIELD_SUB_FOO_STORAGE = 'sub_foo_id';
+    private const FIELD_SUB_FOO_PROPERTY = 'subFoo';
+    private const FIELD_SUB_FOO_REFERENCE = 'id';
 
-    private const string FIELD_PARENT_VERSION_ID_STORAGE = 'parent_version_id';
+    private const FIELD_PARENT_VERSION_ID_STORAGE = 'parent_version_id';
 
     public function getEntityName(): string
     {
