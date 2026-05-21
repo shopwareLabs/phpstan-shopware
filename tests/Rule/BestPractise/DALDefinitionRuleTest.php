@@ -81,4 +81,9 @@ class DALDefinitionRuleTest extends \PHPStan\Testing\RuleTestCase
             ],
         ]);
     }
+
+    public function testConstantValuesInField(): void
+    {
+        $this->analyse([__DIR__ . '/fixtures/DALDefinitionRule/constants-in-field.php'], []);
+    }
 }
