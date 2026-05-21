@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Shopware\PhpStan\Tests\Rule\BestPractise;
 
 use PHPStan\Rules\Rule;
+use PHPStan\Testing\RuleTestCase;
 use Shopware\PhpStan\Collector\DALDefinitionCollector;
 use Shopware\PhpStan\Collector\DALEntityCollector;
 use Shopware\PhpStan\Rule\BestPractise\DALDefinitionRule;
 
-class DALDefinitionRuleTest extends \PHPStan\Testing\RuleTestCase
+/**
+ * @extends RuleTestCase<DALDefinitionRule>
+ */
+class DALDefinitionRuleTest extends RuleTestCase
 {
     protected function getRule(): Rule
     {
