@@ -7,8 +7,6 @@ namespace Shopware\PhpStan\Collector;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
-use PhpParser\Node\Expr\ArrayItem;
-use PhpParser\Node\Expr\Cast\String_;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Identifier;
@@ -21,8 +19,6 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Collectors\Collector;
 use PHPStan\Node\InClassNode;
 use PHPStan\Reflection\ReflectionProvider;
-use PHPStan\Type\ObjectType;
-use PHPStan\Type\TypeTraverser;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\AutoIncrementField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\BreadcrumbField;
@@ -153,9 +149,10 @@ class DALDefinitionCollector implements Collector
         if ($class->is(ReferenceVersionField::class) && isset($args[0])) {
             $storageName = null;
 
-            if (isset($args[1]) && $args[1]->value instanceof \PhpParser\Node\Scalar\String_) {
-                $storageName = $args[1]->value->value;
-            } else {
+            if (isset($args[1])) {
+                $storageName = $this->toStringValue($args[1]->value, $scope);
+            }
+            if ($storageName === null) {
                 $firstArg = $args[0];
                 $firstValue = $scope->getType($firstArg->value);
                 $constantStrings = $firstValue->getConstantStrings();
@@ -187,30 +184,47 @@ class DALDefinitionCollector implements Collector
         }
 
         if (
-            ($class->is(TranslatedField::class) ||
+            (
+                $class->is(TranslatedField::class) ||
                 $class->is(OneToManyAssociationField::class) ||
                 $class->is(ManyToOneAssociationField::class) ||
                 $class->is(OneToOneAssociationField::class) ||
-                $class->is(ManyToManyAssociationField::class)) &&
-            isset($args[0]) &&
-            property_exists($args[0]->value, 'value')
+                $class->is(ManyToManyAssociationField::class)
+            )
+            && !$class->is(ChildrenAssociationField::class)
+            && isset($args[0])
         ) {
-            if ($args[0]->value instanceof \PhpParser\Node\Scalar\String_) {
-                return $args[0]->value->value;
+            $value = $this->toStringValue($args[0]->value, $scope);
+            if ($value !== null) {
+                return $value;
             }
 
-            throw new \RuntimeException(sprintf("Cannot handle field %s with argument of type %s and value %s", $class->getName(), get_class($args[0]->value), json_encode($args[0]->value->value)));
+            throw new \RuntimeException(sprintf("Cannot handle field %s with argument of type %s", $class->getName(), get_class($args[0]->value)));
         }
 
         if ($class->is(ChildrenAssociationField::class) && !isset($args[1])) {
             return 'children';
         }
 
-        if (isset($args[1]) && $args[1]->value instanceof \PhpParser\Node\Scalar\String_) {
-            return (string) $args[1]->value->value;
+        if (isset($args[1])) {
+            $value = $this->toStringValue($args[1]->value, $scope);
+            if ($value !== null) {
+                return $value;
+            }
         }
 
         throw new \RuntimeException(sprintf("Cannot handle field %s with arguments %s", $class->getName(), json_encode($args)));
+    }
+
+    private function toStringValue(Expr $expr, Scope $scope): ?string
+    {
+        $constantStrings = $scope->getType($expr)->getConstantStrings();
+        if (count($constantStrings) !== 1) {
+            return null;
+        }
+
+        $constantString = $constantStrings[0];
+        return $constantString->getValue();
     }
 
     /**
