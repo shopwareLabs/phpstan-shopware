@@ -38,4 +38,14 @@ class WrongUsage
         $cookie = new Cookie('session', 'abc123', 0, '/', '', true);
         $cookie->withSecure(false);
     }
+
+    public function newCookieWithNamedSecureFalse(): void
+    {
+        new Cookie('session', secure: false);
+    }
+
+    public function cookieCreateWithNamedSecureFalse(): void
+    {
+        Cookie::create('session', secure: false);
+    }
 }

@@ -91,7 +91,16 @@ class ForbidInsecureSymfonyCookieRule implements Rule
             return [];
         }
 
-        return $this->checkSecureParam($node->getArgs(), $node);
+        // Cookie::create() is the fluent-builder entry point. If the caller omits the
+        // $secure argument entirely they are expected to chain ->withSecure(true), which
+        // is checked by processMethodCall(). Only flag when an explicit arg is present
+        // and is not true (positional or named).
+        $args = $node->getArgs();
+        if ($this->findSecureArg($args) === null) {
+            return [];
+        }
+
+        return $this->checkSecureParam($args, $node);
     }
 
     /**
@@ -135,16 +144,36 @@ class ForbidInsecureSymfonyCookieRule implements Rule
      */
     private function checkSecureParam(array $args, Node $node): array
     {
-        if (!isset($args[self::SECURE_PARAM_INDEX])) {
+        $secureArg = $this->findSecureArg($args);
+
+        if ($secureArg === null) {
             return $this->buildError($node);
         }
 
-        $secureArg = $args[self::SECURE_PARAM_INDEX]->value;
-        if ($secureArg instanceof ConstFetch && $secureArg->name->toLowerString() === 'true') {
+        if ($secureArg->value instanceof ConstFetch && $secureArg->value->name->toLowerString() === 'true') {
             return [];
         }
 
         return $this->buildError($node);
+    }
+
+    /**
+     * Returns the Arg node for the $secure parameter, either by name (PHP 8 named
+     * arguments) or by its positional index, or null when not provided at all.
+     *
+     * @param array<Arg> $args
+     */
+    private function findSecureArg(array $args): ?Arg
+    {
+        // Named arguments: PhpParser stores them in source order, not parameter order.
+        foreach ($args as $arg) {
+            if ($arg->name instanceof Identifier && $arg->name->name === 'secure') {
+                return $arg;
+            }
+        }
+
+        // Positional argument at parameter index 5.
+        return $args[self::SECURE_PARAM_INDEX] ?? null;
     }
 
     /**
