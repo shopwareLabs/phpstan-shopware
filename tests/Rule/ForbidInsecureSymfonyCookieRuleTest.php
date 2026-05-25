@@ -46,6 +46,22 @@ class ForbidInsecureSymfonyCookieRuleTest extends RuleTestCase
                 'Symfony Cookie created without explicit secure flag. Use the $secure parameter set to true for HTTPS-only transmission.',
                 39,
             ],
+            [
+                'Symfony Cookie created without explicit secure flag. Use the $secure parameter set to true for HTTPS-only transmission.',
+                45,
+            ],
+            [
+                'Symfony Cookie created without explicit secure flag. Use the $secure parameter set to true for HTTPS-only transmission.',
+                51,
+            ],
+            [
+                'Symfony Cookie created without explicit secure flag. Use the $secure parameter set to true for HTTPS-only transmission.',
+                57,
+            ],
+            [
+                'Symfony Cookie created without explicit secure flag. Use the $secure parameter set to true for HTTPS-only transmission.',
+                63,
+            ],
         ]);
     }
 }

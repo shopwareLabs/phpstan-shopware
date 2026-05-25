@@ -38,4 +38,28 @@ class WrongUsage
         $cookie = new Cookie('session', 'abc123', 0, '/', '', true);
         $cookie->withSecure(false);
     }
+
+    // Named arguments – secure not provided
+    public function newCookieNamedArgsWithoutSecure(): void
+    {
+        new Cookie(name: 'session', value: 'abc123');
+    }
+
+    // Named arguments – secure set to false
+    public function newCookieNamedArgsWithSecureFalse(): void
+    {
+        new Cookie(name: 'session', secure: false);
+    }
+
+    // Fluent builder – create() + withSecure(false)
+    public function cookieCreateFluentWithSecureFalse(): void
+    {
+        Cookie::create('session')->withSecure(false);
+    }
+
+    // Fluent builder – new Cookie + withSecure(false)
+    public function newCookieFluentWithSecureFalse(): void
+    {
+        (new Cookie('session'))->withSecure(false);
+    }
 }
