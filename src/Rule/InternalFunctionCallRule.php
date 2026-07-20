@@ -39,7 +39,7 @@ class InternalFunctionCallRule implements Rule
             return [];
         }
 
-        $function = $this->reflectionProvider->getFunction($node->name, null);
+        $function = $this->reflectionProvider->getFunction($node->name, $scope);
         if (!$function->isInternal()->yes()) {
             return [];
         }

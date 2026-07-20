@@ -26,6 +26,7 @@ class InternalFunctionCallRuleTest extends RuleTestCase
     {
         $this->analyse([
             __DIR__ . '/fixtures/InternalFunctionCallRule/app/Test/case.php',
+            __DIR__ . '/fixtures/InternalFunctionCallRule/TestCaseClassWithoutError.php',
             __DIR__ . '/fixtures/InternalFunctionCallRule/internal-function.php',
         ], [
             [
