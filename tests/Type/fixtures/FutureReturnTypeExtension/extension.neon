@@ -1,0 +1,10 @@
+parameters:
+    scanFiles:
+        - widens-return.php
+
+services:
+    -
+        class: Shopware\PhpStan\Rule\FutureCompatibility\AnnouncedTypeResolver
+    -
+        class: Shopware\PhpStan\Type\FutureReturnTypeExtension
+        tags: [phpstan.broker.expressionTypeResolverExtension]
