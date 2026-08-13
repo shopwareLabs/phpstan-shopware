@@ -9,9 +9,7 @@ use Shopware\Core\Framework\Deprecation\BCChange\ParameterTypeNarrowing;
 class FutureSubject
 {
     #[ParameterTypeNarrowing(version: 'v6.8.0', parameterName: 'id', newType: 'string')]
-    public function find(string|int $id): void
-    {
-    }
+    public function find(string|int $id): void {}
 }
 
 class FutureCaller

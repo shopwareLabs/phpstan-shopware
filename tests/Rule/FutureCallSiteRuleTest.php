@@ -19,7 +19,7 @@ class FutureCallSiteRuleTest extends RuleTestCase
     public function testReportsFutureIncompatibleCallSite(): void
     {
         $this->analyse([__DIR__ . '/fixtures/FutureCallSiteRule/call-site.php'], [
-            ['Parameter $id of "Shopware\\PhpStan\\Tests\\Fixture\\FutureSubject::find()" will be narrowed to string in v6.8.0, but int is passed. Pass string to stay compatible with both versions.', 21],
+            ['Parameter $id of "Shopware\\PhpStan\\Tests\\Fixture\\FutureSubject::find()" will be narrowed to string in v6.8.0, but int is passed. Pass string to stay compatible with both versions.', 19],
         ]);
     }
 
