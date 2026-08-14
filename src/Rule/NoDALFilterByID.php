@@ -8,6 +8,7 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Rules\Rule;
+use PHPStan\Type\ObjectType;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsAnyFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
@@ -29,11 +30,11 @@ class NoDALFilterByID implements Rule
             return [];
         }
 
-        if (!$scope->getType($node->var)->isInstanceOf(Criteria::class)->yes()) {
+        if (!(new ObjectType(Criteria::class))->isSuperTypeOf($scope->getType($node->var))->yes()) {
             return [];
         }
 
-        if (!isset($node->args[0]) || !$node->args[0]->value instanceof Node\Expr\New_) {
+        if (!isset($node->args[0]) || !$node->args[0] instanceof Node\Arg || !$node->args[0]->value instanceof Node\Expr\New_) {
             return [];
         }
 
@@ -53,17 +54,11 @@ class NoDALFilterByID implements Rule
             return [];
         }
 
-        $args = $node->args;
-        if (!is_array($args) || !isset($args[0])) {
+        if (!isset($node->args[0]) || !$node->args[0] instanceof Node\Arg) {
             return [];
         }
 
-        $firstArgNode = $args[0];
-        if (!$firstArgNode instanceof Node\Arg) {
-            return [];
-        }
-
-        $firstArgValue = $firstArgNode->value;
+        $firstArgValue = $node->args[0]->value;
 
         if (!$firstArgValue instanceof Node\Scalar\String_) {
             return [];
