@@ -6,7 +6,6 @@ namespace Shopware\PhpStan\Tests\Rule;
 
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
-use Shopware\PhpStan\Rule\MethodBecomesAbstractRule;
 use Shopware\PhpStan\Rule\NoDALFilterByID;
 
 /**
@@ -23,7 +22,7 @@ class NoDALFilterByIDTest extends RuleTestCase
                 <<<EOF
 Using "id" directly in EqualsFilter or EqualsAnyFilter is forbidden. Pass the ids directly to the constructor of Criteria or use setIds instead
 EOF,
-                12,
+                13,
             ],
         ]);
     }

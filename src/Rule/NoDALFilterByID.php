@@ -5,72 +5,51 @@ declare(strict_types=1);
 namespace Shopware\PhpStan\Rule;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr\New_;
-use PhpParser\NodeFinder;
+use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Rules\Rule;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsAnyFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\MultiFilter;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\NotFilter;
 use PHPStan\Rules\RuleErrorBuilder;
 
 /**
- * @implements Rule<New_>
+ * @implements Rule<MethodCall>
  */
 class NoDALFilterByID implements Rule
 {
     public function getNodeType(): string
     {
-        return New_::class;
+        return MethodCall::class;
     }
 
     public function processNode(Node $node, Scope $scope): array
     {
-        if (!$node->class instanceof Node\Name) {
+        if (!$node->name instanceof Node\Identifier || $node->name->toString() !== 'addFilter') {
             return [];
         }
 
-        $className = $node->class->toString();
-
-        // When we find a MultiFilter/NotFilter, mark all nested New_ nodes as allowed
-        if (in_array($className, [MultiFilter::class, NotFilter::class], true)) {
-            $this->markNestedNodesAsAllowed($node);
+        if (!$scope->getType($node->var)->isInstanceOf(Criteria::class)->yes()) {
             return [];
         }
 
-        // Check direct EqualsFilter/EqualsAnyFilter usage
-        if (in_array($className, [EqualsFilter::class, EqualsAnyFilter::class], true)) {
-            return $this->checkFilterNode($node, $scope);
+        if (!isset($node->args[0]) || !$node->args[0]->value instanceof Node\Expr\New_) {
+            return [];
         }
 
-        return [];
-    }
-
-    private function markNestedNodesAsAllowed(Node $allowedFilterNode): void
-    {
-        $nodeFinder = new NodeFinder();
-
-        // Find all New_ nodes within this allowed filter node
-        $nestedNewNodes = $nodeFinder->findInstanceOf($allowedFilterNode, New_::class);
-
-        foreach ($nestedNewNodes as $nestedNode) {
-            // Mark this node as being inside an allowed filter
-            $nestedNode->setAttribute('insideAllowedFilter', true);
-        }
+        return $this->checkFilterNode($node->args[0]->value);
     }
 
     /**
      * @return list<\PHPStan\Rules\IdentifierRuleError>
      */
-    private function checkFilterNode(Node $node, Scope $scope): array
+    private function checkFilterNode(Node\Expr\New_ $node): array
     {
-        // Check if this node is marked as being inside an allowed filter
-        if ($node->getAttribute('insideAllowedFilter') === true) {
+        if (!$node->class instanceof Node\Name) {
             return [];
         }
 
-        if (empty($node->args)) {
+        if (!in_array($node->class->toString(), [EqualsFilter::class, EqualsAnyFilter::class], true) || $node->args === []) {
             return [];
         }
 
