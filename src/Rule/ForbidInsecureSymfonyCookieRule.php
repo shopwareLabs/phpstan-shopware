@@ -42,11 +42,11 @@ class ForbidInsecureSymfonyCookieRule implements Rule
     public function processNode(Node $node, Scope $scope): array
     {
         if ($node instanceof New_) {
-            return $this->processNew($node);
+            return $this->processNew($node, $scope);
         }
 
         if ($node instanceof StaticCall) {
-            return $this->processStaticCall($node);
+            return $this->processStaticCall($node, $scope);
         }
 
         if ($node instanceof MethodCall) {
@@ -59,13 +59,13 @@ class ForbidInsecureSymfonyCookieRule implements Rule
     /**
      * @return list<IdentifierRuleError>
      */
-    private function processNew(New_ $node): array
+    private function processNew(New_ $node, Scope $scope): array
     {
         if (!$node->class instanceof Name) {
             return [];
         }
 
-        if ($node->class->toString() !== self::SYMFONY_COOKIE_CLASS) {
+        if (!$this->isSymfonyCookie($node, $scope)) {
             return [];
         }
 
@@ -81,13 +81,13 @@ class ForbidInsecureSymfonyCookieRule implements Rule
     /**
      * @return list<IdentifierRuleError>
      */
-    private function processStaticCall(StaticCall $node): array
+    private function processStaticCall(StaticCall $node, Scope $scope): array
     {
         if (!$node->class instanceof Name) {
             return [];
         }
 
-        if ($node->class->toString() !== self::SYMFONY_COOKIE_CLASS) {
+        if (!$this->isSymfonyCookie($node, $scope)) {
             return [];
         }
 
@@ -201,6 +201,11 @@ class ForbidInsecureSymfonyCookieRule implements Rule
         if ($node->var instanceof New_ || $node->var instanceof StaticCall) {
             $node->var->setAttribute(self::ATTR_SECURE_CHECKED_BY_WITHSECURE, true);
         }
+    }
+
+    private function isSymfonyCookie(Expr $node, Scope $scope): bool
+    {
+        return (new ObjectType(self::SYMFONY_COOKIE_CLASS))->isSuperTypeOf($scope->getType($node))->yes();
     }
 
     /**
