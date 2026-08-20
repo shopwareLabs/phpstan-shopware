@@ -32,6 +32,15 @@ final class FutureCallSiteRule implements Rule
 {
     private const ATTRIBUTE_NAMESPACE = 'Shopware\\Core\\Framework\\Deprecation\\BCChange\\';
 
+    private const METHOD_BECOMES_INTERNAL = 'shopware.futureIncompatibility.methodBecomesInternal';
+    private const METHOD_VISIBILITY_CHANGE = 'shopware.futureIncompatibility.methodVisibilityChange';
+    private const PARAMETER_REMOVAL = 'shopware.futureIncompatibility.parameterRemoval';
+    private const PARAMETER_NAME_CHANGE = 'shopware.futureIncompatibility.parameterNameChange';
+    private const NEW_REQUIRED_PARAMETER = 'shopware.futureIncompatibility.newRequiredParameter';
+    private const PARAMETER_DEFAULT_VALUE_CHANGE = 'shopware.futureIncompatibility.parameterDefaultValueChange';
+    private const PARAMETER_TYPE_NARROWING = 'shopware.futureIncompatibility.parameterTypeNarrowing';
+    private const CLASS_BECOMES_INTERNAL = 'shopware.futureIncompatibility.classBecomesInternal';
+
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
         private readonly AnnouncedTypeResolver $typeResolver,
@@ -69,34 +78,34 @@ final class FutureCallSiteRule implements Rule
             $version = $this->stringArgument($arguments, 'version', 0);
 
             if ($name === self::ATTRIBUTE_NAMESPACE . 'BecomesInternal') {
-                $errors[] = $this->error(sprintf('"%s" will become internal in %s. Stop calling it to stay compatible.', $symbol, $version));
+                $errors[] = $this->error(sprintf('"%s" will become internal in %s. Stop calling it to stay compatible.', $symbol, $version), self::METHOD_BECOMES_INTERNAL);
             } elseif ($name === self::ATTRIBUTE_NAMESPACE . 'VisibilityChange') {
                 $visibility = $arguments['newVisibility'] ?? $arguments[1] ?? null;
                 if (!$this->canAccess($visibility, $class, $scope)) {
-                    $errors[] = $this->error(sprintf('"%s" will become %s in %s. This call will break; stop calling it from outside that scope.', $symbol, is_string($visibility) ? $visibility : '?', $version));
+                    $errors[] = $this->error(sprintf('"%s" will become %s in %s. This call will break; stop calling it from outside that scope.', $symbol, is_string($visibility) ? $visibility : '?', $version), self::METHOD_VISIBILITY_CHANGE);
                 }
             } elseif ($name === self::ATTRIBUTE_NAMESPACE . 'ParameterRemoval') {
                 $parameter = $arguments['parameterName'] ?? $arguments[1] ?? null;
                 if (is_string($parameter) && $this->argument($node, $method, $parameter) !== null) {
-                    $errors[] = $this->error(sprintf('Parameter $%s of "%s" will be removed in %s. Stop passing it to stay compatible with both versions.', $parameter, $symbol, $version));
+                    $errors[] = $this->error(sprintf('Parameter $%s of "%s" will be removed in %s. Stop passing it to stay compatible with both versions.', $parameter, $symbol, $version), self::PARAMETER_REMOVAL);
                 }
             } elseif ($name === self::ATTRIBUTE_NAMESPACE . 'ParameterNameChange') {
                 $parameter = $arguments['parameterName'] ?? $arguments[1] ?? null;
                 foreach ($node->getArgs() as $argument) {
                     if ($argument->name !== null && $argument->name->toString() === $parameter) {
                         $newName = $this->stringArgument($arguments, 'newName', 2);
-                        $errors[] = $this->error(sprintf('Parameter $%s of "%s" will be renamed to $%s in %s. A named argument cannot be compatible with both versions; pass it positionally.', $parameter, $symbol, $newName, $version));
+                        $errors[] = $this->error(sprintf('Parameter $%s of "%s" will be renamed to $%s in %s. A named argument cannot be compatible with both versions; pass it positionally.', $parameter, $symbol, $newName, $version), self::PARAMETER_NAME_CHANGE);
                     }
                 }
             } elseif ($name === self::ATTRIBUTE_NAMESPACE . 'NewRequiredParameter') {
                 if (!$this->hasUnpack($node) && count($node->getArgs()) <= count($method->getParameters())) {
                     $parameter = $this->stringArgument($arguments, 'parameterName', 1);
-                    $errors[] = $this->error(sprintf('"%s" will require a new parameter $%s in %s. Pass it positionally now to stay compatible with both versions.', $symbol, $parameter, $version));
+                    $errors[] = $this->error(sprintf('"%s" will require a new parameter $%s in %s. Pass it positionally now to stay compatible with both versions.', $symbol, $parameter, $version), self::NEW_REQUIRED_PARAMETER);
                 }
             } elseif ($name === self::ATTRIBUTE_NAMESPACE . 'ParameterDefaultValueChange') {
                 $parameter = $arguments['parameterName'] ?? $arguments[1] ?? null;
                 if (is_string($parameter) && $this->argument($node, $method, $parameter) === null) {
-                    $errors[] = $this->error(sprintf('The default value of parameter $%s of "%s" will change in %s. Pass the current default explicitly to retain current behavior.', $parameter, $symbol, $version));
+                    $errors[] = $this->error(sprintf('The default value of parameter $%s of "%s" will change in %s. Pass the current default explicitly to retain current behavior.', $parameter, $symbol, $version), self::PARAMETER_DEFAULT_VALUE_CHANGE);
                 }
             } elseif ($name === self::ATTRIBUTE_NAMESPACE . 'ParameterTypeNarrowing') {
                 $parameter = $arguments['parameterName'] ?? $arguments[1] ?? null;
@@ -106,7 +115,7 @@ final class FutureCallSiteRule implements Rule
                 if ($argument !== null && $announced !== null) {
                     $actual = $scope->getType($argument->value);
                     if ($announced->isSuperTypeOf($actual)->no()) {
-                        $errors[] = $this->error(sprintf('Parameter $%s of "%s" will be narrowed to %s in %s, but %s is passed. Pass %s to stay compatible with both versions.', $parameter, $symbol, $newType, $version, $actual->describe(VerbosityLevel::typeOnly()), $newType));
+                        $errors[] = $this->error(sprintf('Parameter $%s of "%s" will be narrowed to %s in %s, but %s is passed. Pass %s to stay compatible with both versions.', $parameter, $symbol, $newType, $version, $actual->describe(VerbosityLevel::typeOnly()), $newType), self::PARAMETER_TYPE_NARROWING);
                     }
                 }
             }
@@ -154,7 +163,7 @@ final class FutureCallSiteRule implements Rule
             if ($attribute->getName() === self::ATTRIBUTE_NAMESPACE . 'BecomesInternal') {
                 $arguments = $attribute->getArguments();
 
-                return [$this->error(sprintf('Class "%s" will become internal in %s. Stop using it to stay compatible.', $class->getDisplayName(), $this->stringArgument($arguments, 'version', 0)))];
+                return [$this->error(sprintf('Class "%s" will become internal in %s. Stop using it to stay compatible.', $class->getDisplayName(), $this->stringArgument($arguments, 'version', 0)), self::CLASS_BECOMES_INTERNAL)];
             }
         }
 
@@ -212,8 +221,8 @@ final class FutureCallSiteRule implements Rule
         return is_string($value) ? $value : '?';
     }
 
-    private function error(string $message): IdentifierRuleError
+    private function error(string $message, string $identifier): IdentifierRuleError
     {
-        return RuleErrorBuilder::message($message)->identifier('shopware.futureIncompatibility.callSite')->build();
+        return RuleErrorBuilder::message($message)->identifier($identifier)->build();
     }
 }

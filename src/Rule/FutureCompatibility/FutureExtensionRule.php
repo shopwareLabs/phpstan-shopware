@@ -23,6 +23,13 @@ final class FutureExtensionRule implements Rule
 {
     private const ATTRIBUTE_NAMESPACE = 'Shopware\\Core\\Framework\\Deprecation\\BCChange\\';
 
+    private const EXTENDS_CLASS_BECOMING_FINAL = 'shopware.futureIncompatibility.extendsClassBecomingFinal';
+    private const EXTENDS_CLASS_BECOMING_INTERNAL = 'shopware.futureIncompatibility.extendsClassBecomingInternal';
+    private const MISSING_BECOMES_ABSTRACT_METHOD_IMPLEMENTATION = 'shopware.futureIncompatibility.missingBecomesAbstractMethodImplementation';
+    private const MISSING_NEW_OPTIONAL_PARAMETER_IN_OVERRIDE = 'shopware.futureIncompatibility.missingNewOptionalParameterInOverride';
+    private const PARAMETER_TYPE_WIDENING_IN_OVERRIDE = 'shopware.futureIncompatibility.parameterTypeWideningInOverride';
+    private const RETURN_TYPE_NARROWING_IN_OVERRIDE = 'shopware.futureIncompatibility.returnTypeNarrowingInOverride';
+
     public function __construct(private readonly AnnouncedTypeResolver $typeResolver) {}
 
     public function getNodeType(): string
@@ -40,10 +47,10 @@ final class FutureExtensionRule implements Rule
                 $arguments = $attribute->getArguments();
                 $version = $this->stringArgument($arguments, 'version', 0);
                 if ($attribute->getName() === self::ATTRIBUTE_NAMESPACE . 'BecomesFinal') {
-                    $errors[] = $this->error(sprintf('"%s" extends "%s", which will become final in %s. There is no forward-compatible way to keep extending it.', $class->getDisplayName(), $parent->getDisplayName(), $version));
+                    $errors[] = $this->error(sprintf('"%s" extends "%s", which will become final in %s. There is no forward-compatible way to keep extending it.', $class->getDisplayName(), $parent->getDisplayName(), $version), self::EXTENDS_CLASS_BECOMING_FINAL);
                 }
                 if ($attribute->getName() === self::ATTRIBUTE_NAMESPACE . 'BecomesInternal') {
-                    $errors[] = $this->error(sprintf('"%s" extends "%s", which will become internal in %s. Stop extending it to stay compatible.', $class->getDisplayName(), $parent->getDisplayName(), $version));
+                    $errors[] = $this->error(sprintf('"%s" extends "%s", which will become internal in %s. Stop extending it to stay compatible.', $class->getDisplayName(), $parent->getDisplayName(), $version), self::EXTENDS_CLASS_BECOMING_INTERNAL);
                 }
             }
 
@@ -57,7 +64,7 @@ final class FutureExtensionRule implements Rule
                     $version = $this->stringArgument($arguments, 'version', 0);
                     $name = $attribute->getName();
                     if ($name === self::ATTRIBUTE_NAMESPACE . 'BecomesAbstract' && $override === null && !$class->isAbstract()) {
-                        $errors[] = $this->error(sprintf('"%s::%s()" will become abstract in %s. Implement it in "%s" now to stay compatible with both versions.', $parent->getDisplayName(), $method->getName(), $version, $class->getDisplayName()));
+                        $errors[] = $this->error(sprintf('"%s::%s()" will become abstract in %s. Implement it in "%s" now to stay compatible with both versions.', $parent->getDisplayName(), $method->getName(), $version, $class->getDisplayName()), self::MISSING_BECOMES_ABSTRACT_METHOD_IMPLEMENTATION);
                     }
                     if ($override === null) {
                         continue;
@@ -66,7 +73,7 @@ final class FutureExtensionRule implements Rule
                         $parameter = $arguments['parameterName'] ?? $arguments[1] ?? null;
                         if (is_string($parameter) && !$this->hasParameter($override, $parameter)) {
                             $type = $this->stringArgument($arguments, 'parameterType', 2);
-                            $errors[] = $this->error(sprintf('"%s::%s()" will get a new optional parameter $%s (%s) in %s. Add it to the override in "%s" now to stay compatible with both versions.', $parent->getDisplayName(), $method->getName(), $parameter, $type, $version, $class->getDisplayName()));
+                            $errors[] = $this->error(sprintf('"%s::%s()" will get a new optional parameter $%s (%s) in %s. Add it to the override in "%s" now to stay compatible with both versions.', $parent->getDisplayName(), $method->getName(), $parameter, $type, $version, $class->getDisplayName()), self::MISSING_NEW_OPTIONAL_PARAMETER_IN_OVERRIDE);
                         }
                     }
                     if ($name === self::ATTRIBUTE_NAMESPACE . 'ParameterTypeWidening') {
@@ -75,7 +82,7 @@ final class FutureExtensionRule implements Rule
                         $announced = is_string($newType) ? $this->typeResolver->resolve($newType, $method->getDeclaringClass()->getName()) : null;
                         $current = is_string($parameter) ? $this->parameterType($class, $override->getName(), $parameter) : null;
                         if ($announced !== null && $current !== null && !$current->isSuperTypeOf($announced)->yes()) {
-                            $errors[] = $this->error(sprintf('Parameter $%s of "%s::%s()" will be widened to %s in %s. Widen the override in "%s" now to stay compatible with both versions.', $parameter, $parent->getDisplayName(), $method->getName(), $newType, $version, $class->getDisplayName()));
+                            $errors[] = $this->error(sprintf('Parameter $%s of "%s::%s()" will be widened to %s in %s. Widen the override in "%s" now to stay compatible with both versions.', $parameter, $parent->getDisplayName(), $method->getName(), $newType, $version, $class->getDisplayName()), self::PARAMETER_TYPE_WIDENING_IN_OVERRIDE);
                         }
                     }
                     if ($name === self::ATTRIBUTE_NAMESPACE . 'ReturnTypeNarrowing') {
@@ -83,7 +90,7 @@ final class FutureExtensionRule implements Rule
                         $announced = is_string($newType) && in_array(strtolower($newType), ['self', 'static', '$this'], true) ? new ObjectType($class->getName()) : (is_string($newType) ? $this->typeResolver->resolve($newType, $method->getDeclaringClass()->getName()) : null);
                         $return = $class->getNativeMethod($override->getName())->getVariants()[0]->getReturnType();
                         if ($announced !== null && !$announced->isSuperTypeOf($return)->yes()) {
-                            $errors[] = $this->error(sprintf('The return type of "%s::%s()" will be narrowed to %s in %s. Narrow the override in "%s" now to stay compatible with both versions.', $parent->getDisplayName(), $method->getName(), $newType, $version, $class->getDisplayName()));
+                            $errors[] = $this->error(sprintf('The return type of "%s::%s()" will be narrowed to %s in %s. Narrow the override in "%s" now to stay compatible with both versions.', $parent->getDisplayName(), $method->getName(), $newType, $version, $class->getDisplayName()), self::RETURN_TYPE_NARROWING_IN_OVERRIDE);
                         }
                     }
                 }
@@ -130,8 +137,8 @@ final class FutureExtensionRule implements Rule
         return is_string($value) ? $value : '?';
     }
 
-    private function error(string $message): IdentifierRuleError
+    private function error(string $message, string $identifier): IdentifierRuleError
     {
-        return RuleErrorBuilder::message($message)->identifier('shopware.futureIncompatibility.extension')->build();
+        return RuleErrorBuilder::message($message)->identifier($identifier)->build();
     }
 }
