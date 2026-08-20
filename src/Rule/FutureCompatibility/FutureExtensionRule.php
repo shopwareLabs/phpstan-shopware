@@ -132,6 +132,6 @@ final class FutureExtensionRule implements Rule
 
     private function error(string $message): IdentifierRuleError
     {
-        return RuleErrorBuilder::message($message)->identifier('shopware.futureIncompatibility')->build();
+        return RuleErrorBuilder::message($message)->identifier('shopware.futureIncompatibility.extension')->build();
     }
 }
