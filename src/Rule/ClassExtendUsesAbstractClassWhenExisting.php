@@ -45,6 +45,10 @@ class ClassExtendUsesAbstractClassWhenExisting implements Rule
             return [];
         }
 
+        if ($parentClassReflection->isAbstract()) {
+            return [];
+        }
+
         foreach ($parentClassReflection->getParents() as $parent) {
             if ($parent->isAbstract()) {
                 return [

@@ -22,3 +22,13 @@ class Plugin extends Core
         return new Plugin();
     }
 }
+
+abstract class AbstractPluginDecorator extends AbstractCore {}
+
+class PluginDecorator extends AbstractPluginDecorator
+{
+    public function getDecorated(): PluginDecorator
+    {
+        return new PluginDecorator();
+    }
+}
