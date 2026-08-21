@@ -71,3 +71,32 @@ class SubclassCaller extends BCSubject
         $this->becomesProtected();
     }
 }
+
+/** @deprecated tag:v6.8.0 - This extension will be removed with the next major version. */
+class DeprecatedCaller
+{
+    public function trigger(BCSubject $subject, InternalSubject $internal): void
+    {
+        $subject->internalMethod();
+        $internal->anyMethod();
+    }
+}
+
+class MethodDeprecatedCaller
+{
+    /** @deprecated tag:v6.8.0 - This extension hook will be removed with the next major version. */
+    public function trigger(BCSubject $subject, InternalSubject $internal): void
+    {
+        $subject->internalMethod();
+        $internal->anyMethod();
+    }
+}
+
+class LaterDeprecatedCaller
+{
+    /** @deprecated tag:v6.9.0 - This extension hook remains available in v6.8.0. */
+    public function trigger(BCSubject $subject): void
+    {
+        $subject->internalMethod();
+    }
+}

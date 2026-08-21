@@ -29,6 +29,7 @@ class FutureCallSiteRuleTest extends RuleTestCase
             ['The default value of parameter $strict of "Shopware\\PhpStan\\Tests\\Fixture\\FutureCallSiteRule\\BCSubject::withDefaultValue()" will change in v6.8.0. Pass the current default explicitly to retain current behavior.', 60],
             ['Class "Shopware\\PhpStan\\Tests\\Fixture\\FutureCallSiteRule\\InternalSubject" will become internal in v6.8.0. Stop using it to stay compatible.', 62],
             ['Class "Shopware\\PhpStan\\Tests\\Fixture\\FutureCallSiteRule\\InternalSubject" will become internal in v6.8.0. Stop using it to stay compatible.', 63],
+            ['"Shopware\\PhpStan\\Tests\\Fixture\\FutureCallSiteRule\\BCSubject::internalMethod()" will become internal in v6.8.0. Stop calling it to stay compatible.', 100],
         ]);
     }
 

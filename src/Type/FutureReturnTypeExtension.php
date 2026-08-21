@@ -31,7 +31,7 @@ final readonly class FutureReturnTypeExtension implements ExpressionTypeResolver
     {
         if ($expr instanceof MethodCall && $expr->name instanceof Identifier) {
             foreach ($scope->getType($expr->var)->getObjectClassReflections() as $class) {
-                $type = $this->returnType($class->getNativeReflection(), $expr->name->toString());
+                $type = $this->returnType($class->getNativeReflection(), $expr->name->toString(), $scope);
                 if ($type !== null) {
                     return $type;
                 }
@@ -42,13 +42,13 @@ final readonly class FutureReturnTypeExtension implements ExpressionTypeResolver
         if ($expr instanceof StaticCall && $expr->name instanceof Identifier && $expr->class instanceof Name) {
             $class = $scope->resolveName($expr->class);
 
-            return $this->reflectionProvider->hasClass($class) ? $this->returnType($this->reflectionProvider->getClass($class)->getNativeReflection(), $expr->name->toString()) : null;
+            return $this->reflectionProvider->hasClass($class) ? $this->returnType($this->reflectionProvider->getClass($class)->getNativeReflection(), $expr->name->toString(), $scope) : null;
         }
 
         return null;
     }
 
-    private function returnType(ReflectionClass|ReflectionEnum $class, string $method): ?Type
+    private function returnType(ReflectionClass|ReflectionEnum $class, string $method, Scope $scope): ?Type
     {
         if (!$class->hasMethod($method)) {
             return null;
@@ -58,11 +58,27 @@ final readonly class FutureReturnTypeExtension implements ExpressionTypeResolver
             if ($attribute->getName() === self::RETURN_TYPE_WIDENING) {
                 $arguments = $attribute->getArguments();
                 $type = $arguments['newType'] ?? $arguments[1] ?? null;
+                $version = $arguments['version'] ?? $arguments[0] ?? null;
 
-                return is_string($type) ? $this->typeResolver->resolve($type, $reflection->getDeclaringClass()->getName()) : null;
+                if (!is_string($type) || !is_string($version) || $this->isDeprecatedInVersion($scope, $version)) {
+                    return null;
+                }
+
+                return $this->typeResolver->resolve($type, $reflection->getDeclaringClass()->getName());
             }
         }
 
         return null;
+    }
+
+    private function isDeprecatedInVersion(Scope $scope, string $version): bool
+    {
+        return $this->hasDeprecationTagForVersion($scope->getClassReflection()?->getDeprecatedDescription(), $version)
+            || $this->hasDeprecationTagForVersion($scope->getFunction()?->getDeprecatedDescription(), $version);
+    }
+
+    private function hasDeprecationTagForVersion(?string $description, string $version): bool
+    {
+        return $description !== null && preg_match(sprintf('/(?:^|\\s)tag:%s(?:\\s|$)/', preg_quote($version, '/')), $description) === 1;
     }
 }

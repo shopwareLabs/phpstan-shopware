@@ -64,7 +64,7 @@ final class FutureCallSiteRule implements Rule
         }
 
         $native = $class->getNativeReflection();
-        $errors = $this->classInternalError($native->getAttributes(), $class);
+        $errors = $this->classInternalError($native->getAttributes(), $class, $scope);
         if (!$native->hasMethod($methodName)) {
             return $errors;
         }
@@ -76,6 +76,10 @@ final class FutureCallSiteRule implements Rule
             $name = $attribute->getName();
             $arguments = $attribute->getArguments();
             $version = $this->stringArgument($arguments, 'version', 0);
+
+            if ($this->isDeprecatedInVersion($scope, $version)) {
+                continue;
+            }
 
             if ($name === self::ATTRIBUTE_NAMESPACE . 'BecomesInternal') {
                 $errors[] = $this->error(sprintf('"%s" will become internal in %s. Stop calling it to stay compatible.', $symbol, $version), self::METHOD_BECOMES_INTERNAL);
@@ -157,13 +161,18 @@ final class FutureCallSiteRule implements Rule
      * @param list<ReflectionAttribute|FakeReflectionAttribute> $attributes
      * @return list<IdentifierRuleError>
      */
-    private function classInternalError(array $attributes, ClassReflection $class): array
+    private function classInternalError(array $attributes, ClassReflection $class, Scope $scope): array
     {
         foreach ($attributes as $attribute) {
             if ($attribute->getName() === self::ATTRIBUTE_NAMESPACE . 'BecomesInternal') {
                 $arguments = $attribute->getArguments();
 
-                return [$this->error(sprintf('Class "%s" will become internal in %s. Stop using it to stay compatible.', $class->getDisplayName(), $this->stringArgument($arguments, 'version', 0)), self::CLASS_BECOMES_INTERNAL)];
+                $version = $this->stringArgument($arguments, 'version', 0);
+                if ($this->isDeprecatedInVersion($scope, $version)) {
+                    return [];
+                }
+
+                return [$this->error(sprintf('Class "%s" will become internal in %s. Stop using it to stay compatible.', $class->getDisplayName(), $version), self::CLASS_BECOMES_INTERNAL)];
             }
         }
 
@@ -219,6 +228,17 @@ final class FutureCallSiteRule implements Rule
         $value = $arguments[$name] ?? $arguments[$position] ?? '?';
 
         return is_string($value) ? $value : '?';
+    }
+
+    private function isDeprecatedInVersion(Scope $scope, string $version): bool
+    {
+        return $this->hasDeprecationTagForVersion($scope->getClassReflection()?->getDeprecatedDescription(), $version)
+            || $this->hasDeprecationTagForVersion($scope->getFunction()?->getDeprecatedDescription(), $version);
+    }
+
+    private function hasDeprecationTagForVersion(?string $description, string $version): bool
+    {
+        return $description !== null && preg_match(sprintf('/(?:^|\\s)tag:%s(?:\\s|$)/', preg_quote($version, '/')), $description) === 1;
     }
 
     private function error(string $message, string $identifier): IdentifierRuleError

@@ -46,10 +46,10 @@ final class FutureExtensionRule implements Rule
             foreach ($parent->getNativeReflection()->getAttributes() as $attribute) {
                 $arguments = $attribute->getArguments();
                 $version = $this->stringArgument($arguments, 'version', 0);
-                if ($attribute->getName() === self::ATTRIBUTE_NAMESPACE . 'BecomesFinal') {
+                if ($attribute->getName() === self::ATTRIBUTE_NAMESPACE . 'BecomesFinal' && !$this->isDeprecatedInVersion($class, null, $scope, $version)) {
                     $errors[] = $this->error(sprintf('"%s" extends "%s", which will become final in %s. There is no forward-compatible way to keep extending it.', $class->getDisplayName(), $parent->getDisplayName(), $version), self::EXTENDS_CLASS_BECOMING_FINAL);
                 }
-                if ($attribute->getName() === self::ATTRIBUTE_NAMESPACE . 'BecomesInternal') {
+                if ($attribute->getName() === self::ATTRIBUTE_NAMESPACE . 'BecomesInternal' && !$this->isDeprecatedInVersion($class, null, $scope, $version)) {
                     $errors[] = $this->error(sprintf('"%s" extends "%s", which will become internal in %s. Stop extending it to stay compatible.', $class->getDisplayName(), $parent->getDisplayName(), $version), self::EXTENDS_CLASS_BECOMING_INTERNAL);
                 }
             }
@@ -63,10 +63,13 @@ final class FutureExtensionRule implements Rule
                     $arguments = $attribute->getArguments();
                     $version = $this->stringArgument($arguments, 'version', 0);
                     $name = $attribute->getName();
-                    if ($name === self::ATTRIBUTE_NAMESPACE . 'BecomesAbstract' && $override === null && !$class->isAbstract()) {
+                    if ($name === self::ATTRIBUTE_NAMESPACE . 'BecomesAbstract' && $override === null && !$class->isAbstract() && !$this->isDeprecatedInVersion($class, null, $scope, $version)) {
                         $errors[] = $this->error(sprintf('"%s::%s()" will become abstract in %s. Implement it in "%s" now to stay compatible with both versions.', $parent->getDisplayName(), $method->getName(), $version, $class->getDisplayName()), self::MISSING_BECOMES_ABSTRACT_METHOD_IMPLEMENTATION);
                     }
                     if ($override === null) {
+                        continue;
+                    }
+                    if ($this->isDeprecatedInVersion($class, $override->getName(), $scope, $version)) {
                         continue;
                     }
                     if ($name === self::ATTRIBUTE_NAMESPACE . 'NewOptionalParameter') {
@@ -135,6 +138,17 @@ final class FutureExtensionRule implements Rule
         $value = $arguments[$name] ?? $arguments[$position] ?? '?';
 
         return is_string($value) ? $value : '?';
+    }
+
+    private function isDeprecatedInVersion(ClassReflection $class, ?string $method, Scope $scope, string $version): bool
+    {
+        return $this->hasDeprecationTagForVersion($class->getDeprecatedDescription(), $version)
+            || ($method !== null && $this->hasDeprecationTagForVersion($class->getMethod($method, $scope)->getDeprecatedDescription(), $version));
+    }
+
+    private function hasDeprecationTagForVersion(?string $description, string $version): bool
+    {
+        return $description !== null && preg_match(sprintf('/(?:^|\\s)tag:%s(?:\\s|$)/', preg_quote($version, '/')), $description) === 1;
     }
 
     private function error(string $message, string $identifier): IdentifierRuleError

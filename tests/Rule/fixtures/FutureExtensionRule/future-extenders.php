@@ -70,3 +70,26 @@ class CompatibleExtension extends ExtensionPointBase
         return 'x';
     }
 }
+
+/** @deprecated tag:v6.8.0 - This extension will be removed with the next major version. */
+class DeprecatedExtension extends WillBeFinal {}
+
+class MethodDeprecatedExtension extends ExtensionPointBase
+{
+    public function toBeAbstract(): void {}
+
+    /** @deprecated tag:v6.8.0 - This extension hook will be removed with the next major version. */
+    public function gainsParameter(string $existing): void {}
+
+    /** @deprecated tag:v6.8.0 - This extension hook will be removed with the next major version. */
+    public function widensParameter(string $value): void {}
+
+    /** @deprecated tag:v6.8.0 - This extension hook will be removed with the next major version. */
+    public function narrowsReturn(): ?string
+    {
+        return null;
+    }
+}
+
+/** @deprecated tag:v6.9.0 - This extension remains available in v6.8.0. */
+class LaterDeprecatedExtension extends WillBeFinal {}
