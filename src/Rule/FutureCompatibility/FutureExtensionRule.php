@@ -63,7 +63,7 @@ final class FutureExtensionRule implements Rule
                     $arguments = $attribute->getArguments();
                     $version = $this->stringArgument($arguments, 'version', 0);
                     $name = $attribute->getName();
-                    if ($name === self::ATTRIBUTE_NAMESPACE . 'BecomesAbstract' && $override === null && !$class->isAbstract() && !$this->isDeprecatedInVersion($class, null, $scope, $version)) {
+                    if ($name === self::ATTRIBUTE_NAMESPACE . 'BecomesAbstract' && !$this->hasConcreteImplementation($class, $parent, $method->getName()) && !$class->isAbstract() && !$this->isDeprecatedInVersion($class, null, $scope, $version)) {
                         $errors[] = $this->error(sprintf('"%s::%s()" will become abstract in %s. Implement it in "%s" now to stay compatible with both versions.', $parent->getDisplayName(), $method->getName(), $version, $class->getDisplayName()), self::MISSING_BECOMES_ABSTRACT_METHOD_IMPLEMENTATION);
                     }
                     if ($override === null) {
@@ -108,6 +108,18 @@ final class FutureExtensionRule implements Rule
         $native = $class->getNativeReflection();
 
         return $native->hasMethod($method) && $native->getMethod($method)->getDeclaringClass()->getName() === $native->getName() ? $native->getMethod($method) : null;
+    }
+
+    private function hasConcreteImplementation(ClassReflection $class, ClassReflection $abstractParent, string $method): bool
+    {
+        $native = $class->getNativeReflection();
+        if (!$native->hasMethod($method)) {
+            return false;
+        }
+
+        $implementation = $native->getMethod($method);
+
+        return !$implementation->isAbstract() && $implementation->getDeclaringClass()->getName() !== $abstractParent->getName();
     }
 
     private function hasParameter(\ReflectionMethod $method, string $name): bool

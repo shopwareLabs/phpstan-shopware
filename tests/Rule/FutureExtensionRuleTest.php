@@ -25,7 +25,7 @@ class FutureExtensionRuleTest extends RuleTestCase
             ['"Shopware\\PhpStan\\Tests\\Fixture\\FutureExtensionRule\\ExtensionPointBase::toBeAbstract()" will become abstract in v6.8.0. Implement it in "Shopware\\PhpStan\\Tests\\Fixture\\FutureExtensionRule\\IncompatibleExtension" now to stay compatible with both versions.', 48],
             ['Parameter $value of "Shopware\\PhpStan\\Tests\\Fixture\\FutureExtensionRule\\ExtensionPointBase::widensParameter()" will be widened to string|int in v6.8.0. Widen the override in "Shopware\\PhpStan\\Tests\\Fixture\\FutureExtensionRule\\IncompatibleExtension" now to stay compatible with both versions.', 48],
             ['The return type of "Shopware\\PhpStan\\Tests\\Fixture\\FutureExtensionRule\\ExtensionPointBase::narrowsReturn()" will be narrowed to string in v6.8.0. Narrow the override in "Shopware\\PhpStan\\Tests\\Fixture\\FutureExtensionRule\\IncompatibleExtension" now to stay compatible with both versions.', 48],
-            ['"Shopware\\PhpStan\\Tests\\Fixture\\FutureExtensionRule\\LaterDeprecatedExtension" extends "Shopware\\PhpStan\\Tests\\Fixture\\FutureExtensionRule\\WillBeFinal", which will become final in v6.8.0. There is no forward-compatible way to keep extending it.', 95],
+            ['"Shopware\\PhpStan\\Tests\\Fixture\\FutureExtensionRule\\LaterDeprecatedExtension" extends "Shopware\\PhpStan\\Tests\\Fixture\\FutureExtensionRule\\WillBeFinal", which will become final in v6.8.0. There is no forward-compatible way to keep extending it.', 102],
         ]);
     }
 

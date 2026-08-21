@@ -71,6 +71,13 @@ class CompatibleExtension extends ExtensionPointBase
     }
 }
 
+class IntermediateExtension extends ExtensionPointBase
+{
+    public function toBeAbstract(): void {}
+}
+
+class IndirectExtension extends IntermediateExtension {}
+
 /** @deprecated tag:v6.8.0 - This extension will be removed with the next major version. */
 class DeprecatedExtension extends WillBeFinal {}
 
