@@ -10,6 +10,9 @@ services:
         class: Shopware\PhpStan\Rule\FutureCompatibility\FutureCallSiteRule
         tags: [phpstan.rules.rule]
     -
+        class: Shopware\PhpStan\Rule\FutureCompatibility\FuturePropertyCompatibilityRule
+        tags: [phpstan.rules.rule]
+    -
         class: Shopware\PhpStan\Rule\FutureCompatibility\FutureExtensionRule
         tags: [phpstan.rules.rule]
     -
