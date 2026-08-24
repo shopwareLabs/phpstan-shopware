@@ -29,6 +29,7 @@ final class FutureExtensionRule implements Rule
     private const MISSING_NEW_OPTIONAL_PARAMETER_IN_OVERRIDE = 'shopware.futureIncompatibility.missingNewOptionalParameterInOverride';
     private const PARAMETER_TYPE_WIDENING_IN_OVERRIDE = 'shopware.futureIncompatibility.parameterTypeWideningInOverride';
     private const RETURN_TYPE_NARROWING_IN_OVERRIDE = 'shopware.futureIncompatibility.returnTypeNarrowingInOverride';
+    private const PROPERTY_REDECLARATION = 'shopware.futureIncompatibility.propertyRedeclaration';
 
     public function __construct(private readonly AnnouncedTypeResolver $typeResolver) {}
 
@@ -96,6 +97,33 @@ final class FutureExtensionRule implements Rule
                             $errors[] = $this->error(sprintf('The return type of "%s::%s()" will be narrowed to %s in %s. Narrow the override in "%s" now to stay compatible with both versions.', $parent->getDisplayName(), $method->getName(), $newType, $version, $class->getDisplayName()), self::RETURN_TYPE_NARROWING_IN_OVERRIDE);
                         }
                     }
+                }
+            }
+
+            foreach ($parent->getNativeReflection()->getProperties() as $property) {
+                $native = $class->getNativeReflection();
+                if ($property->getDeclaringClass()->getName() !== $parent->getName()
+                    || !$native->hasProperty($property->getName())
+                    || $native->getProperty($property->getName())->getDeclaringClass()->getName() !== $native->getName()
+                ) {
+                    continue;
+                }
+
+                foreach ($property->getAttributes() as $attribute) {
+                    $arguments = $attribute->getArguments();
+                    $version = $this->stringArgument($arguments, 'version', 0);
+                    $name = $attribute->getName();
+                    if (!in_array($name, [
+                        self::ATTRIBUTE_NAMESPACE . 'BecomesReadonly',
+                        self::ATTRIBUTE_NAMESPACE . 'PropertyTypeNarrowing',
+                        self::ATTRIBUTE_NAMESPACE . 'PropertyTypeWidening',
+                    ], true)
+                        && !($name === self::ATTRIBUTE_NAMESPACE . 'VisibilityChange' && ($arguments['newVisibility'] ?? $arguments[1] ?? null) === 'private')
+                    ) {
+                        continue;
+                    }
+
+                    $errors[] = $this->error(sprintf('Property "%s::$%s" redeclares "%s::$%s", which has an incompatible property change in %s. Stop redeclaring it; there is no forward-compatible declaration.', $class->getDisplayName(), $property->getName(), $parent->getDisplayName(), $property->getName(), $version), self::PROPERTY_REDECLARATION);
                 }
             }
         }
