@@ -9,7 +9,9 @@ use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\CallLike;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PHPStan\Analyser\Scope;
@@ -23,9 +25,9 @@ use PHPStan\Rules\IdentifierRuleError;
 use PHPStan\Type\VerbosityLevel;
 
 /**
- * Reports extension call sites incompatible with a BC-change attribute announced by Core.
+ * Reports extension call sites and property accesses incompatible with a BC-change attribute announced by Core.
  *
- * @implements Rule<CallLike>
+ * @implements Rule<Node>
  * @internal
  */
 final class FutureCallSiteRule implements Rule
@@ -34,6 +36,7 @@ final class FutureCallSiteRule implements Rule
 
     private const METHOD_BECOMES_INTERNAL = 'shopware.futureIncompatibility.methodBecomesInternal';
     private const METHOD_VISIBILITY_CHANGE = 'shopware.futureIncompatibility.methodVisibilityChange';
+    private const PROPERTY_VISIBILITY_CHANGE = 'shopware.futureIncompatibility.propertyVisibilityChange';
     private const PARAMETER_REMOVAL = 'shopware.futureIncompatibility.parameterRemoval';
     private const PARAMETER_NAME_CHANGE = 'shopware.futureIncompatibility.parameterNameChange';
     private const NEW_REQUIRED_PARAMETER = 'shopware.futureIncompatibility.newRequiredParameter';
@@ -48,10 +51,23 @@ final class FutureCallSiteRule implements Rule
 
     public function getNodeType(): string
     {
-        return CallLike::class;
+        return Node::class;
     }
 
     public function processNode(Node $node, Scope $scope): array
+    {
+        if ($node instanceof CallLike) {
+            return $this->processCall($node, $scope);
+        }
+
+        if ($node instanceof PropertyFetch || $node instanceof StaticPropertyFetch) {
+            return $this->processPropertyAccess($node, $scope);
+        }
+
+        return [];
+    }
+
+    private function processCall(CallLike $node, Scope $scope): array
     {
         $methodName = $this->methodName($node);
         if ($methodName === null) {
@@ -128,6 +144,48 @@ final class FutureCallSiteRule implements Rule
         return $errors;
     }
 
+    /**
+     * @return list<IdentifierRuleError>
+     */
+    private function processPropertyAccess(PropertyFetch|StaticPropertyFetch $node, Scope $scope): array
+    {
+        if (!$node->name instanceof Identifier) {
+            return [];
+        }
+
+        $propertyName = $node->name->toString();
+        foreach ($this->propertyClasses($node, $scope) as $class) {
+            $native = $class->getNativeReflection();
+            if (!$native->hasProperty($propertyName)) {
+                continue;
+            }
+
+            $property = $native->getProperty($propertyName);
+            foreach ($property->getAttributes() as $attribute) {
+                if ($attribute->getName() !== self::ATTRIBUTE_NAMESPACE . 'VisibilityChange') {
+                    continue;
+                }
+
+                $arguments = $attribute->getArguments();
+                $version = $this->stringArgument($arguments, 'version', 0);
+                if ($this->isDeprecatedInVersion($scope, $version)) {
+                    continue;
+                }
+
+                $visibility = $arguments['newVisibility'] ?? $arguments[1] ?? null;
+                if ($this->canAccess($visibility, $class, $scope)) {
+                    continue;
+                }
+
+                $symbol = sprintf('%s::$%s', $class->getDisplayName(), $propertyName);
+
+                return [$this->error(sprintf('Property "%s" will become %s in %s. This access will break; stop accessing it from outside that scope.', $symbol, is_string($visibility) ? $visibility : '?', $version), self::PROPERTY_VISIBILITY_CHANGE)];
+            }
+        }
+
+        return [];
+    }
+
     private function methodName(CallLike $node): ?string
     {
         if (($node instanceof MethodCall || $node instanceof StaticCall) && $node->name instanceof Identifier) {
@@ -155,6 +213,24 @@ final class FutureCallSiteRule implements Rule
         }
 
         return null;
+    }
+
+    /**
+     * @return list<ClassReflection>
+     */
+    private function propertyClasses(PropertyFetch|StaticPropertyFetch $node, Scope $scope): array
+    {
+        if ($node instanceof PropertyFetch) {
+            return $scope->getType($node->var)->getObjectClassReflections();
+        }
+
+        if (!$node->class instanceof Name) {
+            return [];
+        }
+
+        $className = $scope->resolveName($node->class);
+
+        return $this->reflectionProvider->hasClass($className) ? [$this->reflectionProvider->getClass($className)] : [];
     }
 
     /**
