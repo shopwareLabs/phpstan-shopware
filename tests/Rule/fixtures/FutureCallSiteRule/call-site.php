@@ -14,6 +14,12 @@ use Shopware\Core\Framework\Deprecation\BCChange\VisibilityChange;
 
 class BCSubject
 {
+    #[VisibilityChange(version: 'v6.8.0', newVisibility: 'protected')]
+    public string $becomesProtectedProperty = 'value';
+
+    #[VisibilityChange(version: 'v6.8.0', newVisibility: 'private')]
+    public static string $becomesPrivateProperty = 'value';
+
     #[BecomesInternal(version: 'v6.8.0')]
     public function internalMethod(): void {}
 
@@ -48,6 +54,8 @@ class Caller
     {
         $subject->internalMethod();
         $subject->becomesProtected();
+        $subject->becomesProtectedProperty;
+        BCSubject::$becomesPrivateProperty;
         $subject->withRemoval(['a']);
         $subject->withRemoval(options: ['a']);
         $subject->withRemoval();
@@ -69,6 +77,7 @@ class SubclassCaller extends BCSubject
     public function allowed(): void
     {
         $this->becomesProtected();
+        $this->becomesProtectedProperty;
     }
 }
 
