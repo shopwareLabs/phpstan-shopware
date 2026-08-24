@@ -18,3 +18,6 @@ services:
     -
         class: Shopware\PhpStan\Type\FutureReturnTypeExtension
         tags: [phpstan.broker.expressionTypeResolverExtension]
+    -
+        class: Shopware\PhpStan\Type\FuturePropertyTypeExtension
+        tags: [phpstan.broker.expressionTypeResolverExtension]
