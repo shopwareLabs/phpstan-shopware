@@ -29,8 +29,6 @@ class ForbidInsecureSymfonyCookieRule implements Rule
 
     private const SECURE_PARAM_INDEX = 5;
 
-    private const ATTR_SECURE_CHECKED_BY_WITHSECURE = 'shopware.secureCookieCheckedByWithSecure';
-
     public function getNodeType(): string
     {
         return Expr::class;
@@ -69,12 +67,6 @@ class ForbidInsecureSymfonyCookieRule implements Rule
             return [];
         }
 
-        // If the parent MethodCall (withSecure) already handles the secure flag,
-        // suppress the error for this node.
-        if ($node->getAttribute(self::ATTR_SECURE_CHECKED_BY_WITHSECURE) === true) {
-            return [];
-        }
-
         return $this->checkSecureParam($node->getArgs(), $node);
     }
 
@@ -96,12 +88,6 @@ class ForbidInsecureSymfonyCookieRule implements Rule
         }
 
         if ($node->name->name !== 'create') {
-            return [];
-        }
-
-        // If the parent MethodCall (withSecure) already handles the secure flag,
-        // suppress the error for this node.
-        if ($node->getAttribute(self::ATTR_SECURE_CHECKED_BY_WITHSECURE) === true) {
             return [];
         }
 
@@ -129,9 +115,9 @@ class ForbidInsecureSymfonyCookieRule implements Rule
 
         $args = $node->getArgs();
 
-        // Mark the var so the constructor/create() call does not emit a
-        // duplicate error – the withSecure() call is the authoritative check.
-        $this->markVarAsSecureChecked($node);
+        if (($node->var instanceof New_ || $node->var instanceof StaticCall) && !$this->hasEnabledSecureParam($node->var->getArgs())) {
+            return [];
+        }
 
         // withSecure() with no args defaults to true
         if (!isset($args[0])) {
@@ -153,17 +139,23 @@ class ForbidInsecureSymfonyCookieRule implements Rule
      */
     private function checkSecureParam(array $args, Node $node): array
     {
-        $secureArg = $this->findSecureArg($args);
-
-        if ($secureArg === null) {
-            return $this->buildError($node);
-        }
-
-        if ($secureArg->value instanceof ConstFetch && $secureArg->value->name->toLowerString() === 'true') {
+        if ($this->hasEnabledSecureParam($args)) {
             return [];
         }
 
         return $this->buildError($node);
+    }
+
+    /**
+     * @param array<Arg> $args
+     */
+    private function hasEnabledSecureParam(array $args): bool
+    {
+        $secureArg = $this->findSecureArg($args);
+
+        return $secureArg !== null
+            && $secureArg->value instanceof ConstFetch
+            && $secureArg->value->name->toLowerString() === 'true';
     }
 
     /**
@@ -194,13 +186,6 @@ class ForbidInsecureSymfonyCookieRule implements Rule
         }
 
         return $args[self::SECURE_PARAM_INDEX];
-    }
-
-    private function markVarAsSecureChecked(MethodCall $node): void
-    {
-        if ($node->var instanceof New_ || $node->var instanceof StaticCall) {
-            $node->var->setAttribute(self::ATTR_SECURE_CHECKED_BY_WITHSECURE, true);
-        }
     }
 
     private function isSymfonyCookie(Expr $node, Scope $scope): bool
