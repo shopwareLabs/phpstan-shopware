@@ -67,6 +67,9 @@ final class FutureCallSiteRule implements Rule
         return [];
     }
 
+    /**
+     * @return list<IdentifierRuleError>
+     */
     private function processCall(CallLike $node, Scope $scope): array
     {
         $methodName = $this->methodName($node);
