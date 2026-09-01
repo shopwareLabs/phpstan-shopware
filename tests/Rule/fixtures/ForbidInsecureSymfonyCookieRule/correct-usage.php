@@ -39,24 +39,24 @@ class CorrectUsage
     // Fluent builder – create() + withSecure(true)
     public function cookieCreateFluentWithSecureTrue(): void
     {
-        Cookie::create(name: 'session', secure: true)->withSecure(true);
+        Cookie::create('session')->withSecure(true);
     }
 
     // Fluent builder – create() + withSecure() default
     public function cookieCreateFluentWithSecureDefault(): void
     {
-        Cookie::create(name: 'session', secure: true)->withSecure();
+        Cookie::create('session')->withSecure();
     }
 
     // Fluent builder – new Cookie + withSecure(true)
     public function newCookieFluentWithSecureTrue(): void
     {
-        (new Cookie(name: 'session', secure: true))->withSecure(true);
+        (new Cookie('session'))->withSecure(true);
     }
 
     // Fluent builder – new Cookie + withSecure() default
     public function newCookieFluentWithSecureDefault(): void
     {
-        (new Cookie(name: 'session', secure: true))->withSecure();
+        (new Cookie('session'))->withSecure();
     }
 }

@@ -7,13 +7,17 @@ namespace Shopware\PhpStan\Rule;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
+use PhpParser\NodeFinder;
 use PHPStan\Analyser\Scope;
+use PHPStan\Node\InClassMethodNode;
 use PHPStan\Rules\IdentifierRuleError;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
@@ -21,7 +25,7 @@ use PHPStan\Type\ObjectType;
 use Symfony\Component\HttpFoundation\Cookie;
 
 /**
- * @implements Rule<Expr>
+ * @implements Rule<InClassMethodNode>
  */
 class ForbidInsecureSymfonyCookieRule implements Rule
 {
@@ -31,7 +35,7 @@ class ForbidInsecureSymfonyCookieRule implements Rule
 
     public function getNodeType(): string
     {
-        return Expr::class;
+        return InClassMethodNode::class;
     }
 
     /**
@@ -39,19 +43,32 @@ class ForbidInsecureSymfonyCookieRule implements Rule
      */
     public function processNode(Node $node, Scope $scope): array
     {
-        if ($node instanceof New_) {
-            return $this->processNew($node, $scope);
+        $finder = new NodeFinder();
+        $methodCalls = $finder->findInstanceOf($node->getOriginalNode(), MethodCall::class);
+        $secureFluentCookies = [];
+
+        foreach ($methodCalls as $methodCall) {
+            if (($methodCall->var instanceof New_ || $methodCall->var instanceof StaticCall) && $this->isEnabledWithSecureCall($methodCall)) {
+                $secureFluentCookies[spl_object_id($methodCall->var)] = true;
+            }
         }
 
-        if ($node instanceof StaticCall) {
-            return $this->processStaticCall($node, $scope);
+        $errors = [];
+        foreach ($finder->findInstanceOf($node->getOriginalNode(), Expr::class) as $expression) {
+            if ($expression instanceof New_ && !isset($secureFluentCookies[spl_object_id($expression)])) {
+                $errors = [...$errors, ...$this->processNew($expression, $scope)];
+            }
+
+            if ($expression instanceof StaticCall && !isset($secureFluentCookies[spl_object_id($expression)])) {
+                $errors = [...$errors, ...$this->processStaticCall($expression, $scope)];
+            }
+
+            if ($expression instanceof MethodCall) {
+                $errors = [...$errors, ...$this->processMethodCall($expression, $scope, $node)];
+            }
         }
 
-        if ($node instanceof MethodCall) {
-            return $this->processMethodCall($node, $scope);
-        }
-
-        return [];
+        return $errors;
     }
 
     /**
@@ -97,7 +114,7 @@ class ForbidInsecureSymfonyCookieRule implements Rule
     /**
      * @return list<IdentifierRuleError>
      */
-    private function processMethodCall(MethodCall $node, Scope $scope): array
+    private function processMethodCall(MethodCall $node, Scope $scope, InClassMethodNode $method): array
     {
         if (!$node->name instanceof Identifier) {
             return [];
@@ -107,9 +124,7 @@ class ForbidInsecureSymfonyCookieRule implements Rule
             return [];
         }
 
-        $calledOnType = $scope->getType($node->var);
-        $cookieType = new ObjectType(self::SYMFONY_COOKIE_CLASS);
-        if (!$cookieType->isSuperTypeOf($calledOnType)->yes()) {
+        if (!$this->isSymfonyCookieMethodCall($node, $scope, $method)) {
             return [];
         }
 
@@ -139,23 +154,13 @@ class ForbidInsecureSymfonyCookieRule implements Rule
      */
     private function checkSecureParam(array $args, Node $node): array
     {
-        if ($this->hasEnabledSecureParam($args)) {
+        $secureArg = $this->findSecureArg($args);
+
+        if ($secureArg !== null && $secureArg->value instanceof ConstFetch && $secureArg->value->name->toLowerString() === 'true') {
             return [];
         }
 
         return $this->buildError($node);
-    }
-
-    /**
-     * @param array<Arg> $args
-     */
-    private function hasEnabledSecureParam(array $args): bool
-    {
-        $secureArg = $this->findSecureArg($args);
-
-        return $secureArg !== null
-            && $secureArg->value instanceof ConstFetch
-            && $secureArg->value->name->toLowerString() === 'true';
     }
 
     /**
@@ -186,6 +191,61 @@ class ForbidInsecureSymfonyCookieRule implements Rule
         }
 
         return $args[self::SECURE_PARAM_INDEX];
+    }
+
+    /**
+     * @param array<Arg> $args
+     */
+    private function hasEnabledSecureParam(array $args): bool
+    {
+        $secureArg = $this->findSecureArg($args);
+
+        return $secureArg !== null
+            && $secureArg->value instanceof ConstFetch
+            && $secureArg->value->name->toLowerString() === 'true';
+    }
+
+    private function isEnabledWithSecureCall(MethodCall $node): bool
+    {
+        if (!$node->name instanceof Identifier || $node->name->name !== 'withSecure') {
+            return false;
+        }
+
+        $args = $node->getArgs();
+        if ($args === []) {
+            return true;
+        }
+
+        $secureArg = $args[0];
+
+        return $secureArg->value instanceof ConstFetch && $secureArg->value->name->toLowerString() === 'true';
+    }
+
+    private function isSymfonyCookieMethodCall(MethodCall $node, Scope $scope, InClassMethodNode $method): bool
+    {
+        $cookieType = new ObjectType(self::SYMFONY_COOKIE_CLASS);
+        if ($cookieType->isSuperTypeOf($scope->getType($node->var))->yes()) {
+            return true;
+        }
+
+        if (!$node->var instanceof Variable || !is_string($node->var->name)) {
+            return false;
+        }
+
+        $assignments = (new NodeFinder())->findInstanceOf($method->getOriginalNode(), Assign::class);
+        foreach (array_reverse($assignments) as $assignment) {
+            if ($assignment->getStartFilePos() >= $node->getStartFilePos()
+                || !$assignment->var instanceof Variable
+                || $assignment->var->name !== $node->var->name
+            ) {
+                continue;
+            }
+
+            return ($assignment->expr instanceof New_ || $assignment->expr instanceof StaticCall)
+                && $this->isSymfonyCookie($assignment->expr, $scope);
+        }
+
+        return false;
     }
 
     private function isSymfonyCookie(Expr $node, Scope $scope): bool
