@@ -25,17 +25,18 @@ includes:
 
 or you use PHPStan Extension Installer
 
-### Future compatibility (opt-in)
+### Experimental future compatibility (opt-in)
 
-To validate an extension against announced Shopware BC changes as well as the installed
-version, include the separate ruleset:
+This experimental ruleset validates an extension against announced Shopware BC changes as
+well as the installed version. Its checks and configuration may change as we expand the
+next-major compatibility analysis. Include it separately to opt in:
 
 ```neon
 includes:
     - vendor/shopwarelabs/phpstan-shopware/future-compatibility.neon
 ```
 
-It reports calls and extensions incompatible with the next-major declaration announced by
+It reports calls and extensions incompatible with next-major declarations announced by
 Shopware's BC-change attributes. This ruleset is intentionally separate from `rules.neon`:
 adopting it means choosing to prepare for the next major while remaining compatible with the
 current one.
