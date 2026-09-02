@@ -1,0 +1,23 @@
+# Opt-in analysis for extension code that must run on the current and the next Shopware major.
+#
+# includes:
+#     - vendor/shopwarelabs/phpstan-shopware/future-compatibility.neon
+
+services:
+    -
+        class: Shopware\PhpStan\Rule\FutureCompatibility\AnnouncedTypeResolver
+    -
+        class: Shopware\PhpStan\Rule\FutureCompatibility\FutureCallSiteRule
+        tags: [phpstan.rules.rule]
+    -
+        class: Shopware\PhpStan\Rule\FutureCompatibility\FuturePropertyCompatibilityRule
+        tags: [phpstan.rules.rule]
+    -
+        class: Shopware\PhpStan\Rule\FutureCompatibility\FutureExtensionRule
+        tags: [phpstan.rules.rule]
+    -
+        class: Shopware\PhpStan\Type\FutureReturnTypeExtension
+        tags: [phpstan.broker.expressionTypeResolverExtension]
+    -
+        class: Shopware\PhpStan\Type\FuturePropertyTypeExtension
+        tags: [phpstan.broker.expressionTypeResolverExtension]

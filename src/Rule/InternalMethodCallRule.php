@@ -44,6 +44,10 @@ class InternalMethodCallRule implements Rule
         $methodCalledOnType = $scope->getType($node->var);
 
         foreach ($methodCalledOnType->getObjectClassNames() as $class) {
+            if (!$this->reflectionProvider->hasClass($class)) {
+                continue;
+            }
+
             $classInfo = $this->reflectionProvider->getClass($class);
             try {
                 $methodDetails = $classInfo->getMethod($methodName, $scope);

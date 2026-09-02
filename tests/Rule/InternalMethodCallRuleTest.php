@@ -34,4 +34,11 @@ class InternalMethodCallRuleTest extends RuleTestCase
             ],
         ]);
     }
+
+    public function testUnknownClassDoesNotCauseAnInternalError(): void
+    {
+        $this->analyse([
+            __DIR__ . '/fixtures/InternalMethodCallRule/app/Test/unknown-class.php',
+        ], []);
+    }
 }

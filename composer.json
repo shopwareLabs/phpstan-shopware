@@ -25,7 +25,8 @@
     },
     "classmap": [
       "tests/Rule/fixtures",
-      "tests/Rule/BestPractise/fixtures"
+      "tests/Rule/BestPractise/fixtures",
+      "tests/Type/fixtures"
     ]
   },
   "config": {
